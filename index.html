@@ -154,7 +154,7 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 
 <script>
 const WH="https://discord.com/api/webhooks/1520805025750716507/Avd7bNjbGNa1GSpMf51znVPEHMo8HVHII-bZUcafi_YqU9-X1OVu-B5LTx8SSA6kpSDo";
-const GS="https://script.google.com/macros/s/AKfycbwo7oZsoHQxzvBdmQQpr1WRJuZKx1b-4Bfmen1tPQ1AZf-yXWh2SvrYBhiFHSBt2DS1zg/exec";
+const GS="https://script.google.com/macros/s/AKfycbxiPMARYb6jw1zrsPtt4lJDnl9wfoBfhdrmlvzdqPxl3iP7mkE_1t8xtkgBQ98083OW-g/exec";
 const ADMIN_PASSWORD="kaywolfoff2026";
 let tickets=[],filter="all",adminFilter="all",selectedId=null,adminSelectedId=null,isAdmin=false;
 
@@ -277,7 +277,6 @@ function updateStatus(id){
 }
 
 function deleteTicket(id){
-  if(!confirm("Supprimer ce ticket ?"))return;
   fetch(GS,{method:"POST",body:JSON.stringify({action:"delete",id:id})});
   tickets=tickets.filter(x=>x.id!==id);
   adminSelectedId=null;
