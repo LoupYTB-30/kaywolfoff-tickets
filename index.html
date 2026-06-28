@@ -281,7 +281,9 @@ function deleteTicket(id){
   fetch(GS,{method:"POST",body:JSON.stringify({action:"delete",id:id})});
   tickets=tickets.filter(x=>x.id!==id);
   adminSelectedId=null;
+  selectedId=null;
   document.getElementById("admin-ticket-detail").innerHTML='<div class="empty">Sélectionne un ticket</div>';
+  document.getElementById("ticket-detail").innerHTML='<div class="empty">Sélectionne un ticket</div>';
   renderAdminList();
   renderList();
 }
