@@ -53,10 +53,6 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 .notif{background:#0f2d1a;border:1px solid #238636;color:#3fb950;border-radius:6px;padding:10px 14px;font-size:13px;display:none;margin-bottom:12px}
 .notif.show{display:block}
 .error{color:#f85149;font-size:13px;display:none;margin-top:4px}
-.config-box{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px;margin-bottom:16px}
-.config-label{font-size:12px;color:#8b949e;margin-bottom:6px}
-.saved{color:#3fb950;font-size:12px;margin-top:4px;display:none}
-.code-block{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:12px;font-family:monospace;font-size:11px;color:#8b949e;overflow-x:auto;white-space:pre;line-height:1.6;margin-top:8px}
 @media(max-width:600px){.layout{grid-template-columns:1fr}.row{grid-template-columns:1fr}}
 </style>
 </head>
@@ -68,7 +64,6 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 <div class="tabs">
   <button class="tab active" onclick="switchTab('tickets')">Tickets <span class="badge" id="open-count">0</span></button>
   <button class="tab" onclick="switchTab('new')">+ Nouveau ticket</button>
-  <button class="tab" onclick="switchTab('config')">⚙️ Config</button>
 </div>
 
 <div id="tab-tickets">
@@ -116,39 +111,25 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
   </div>
 </div>
 
-<div id="tab-config" style="display:none">
-  <div style="max-width:500px">
-    <div class="config-box">
-      <div class="config-label">URL du webhook Discord</div>
-      <input type="text" id="webhook-url" placeholder="https://discord.com/api/webhooks/...">
-      <button class="btn sm primary" onclick="saveWebhook()">Enregistrer</button>
-      <div class="saved" id="webhook-saved">✅ Webhook enregistré !</div>
-    </div>
-    <div class="section-title">Guide d'intégration Google Sites</div>
-    <div style="font-size:13px;color:#8b949e;line-height:1.8">
-      1. Dans Google Sites → <strong style="color:#e6edf3">Intégrer → URL</strong><br>
-      2. Colle l'URL de cette page GitHub Pages<br>
-      3. Les tickets arrivent dans ton salon Discord
-    </div>
-  </div>
-</div>
-
 <script>
+// ============================================
+// METS TON WEBHOOK DISCORD ICI (seul toi peux modifier ce code sur GitHub)
+const WEBHOOK_URL = "https://discord.com/api/webhooks/1520805025750716507/Avd7bNjbGNa1GSpMf51znVPEHMo8HVHII-bZUcafi_YqU9-X1OVu-B5LTx8SSA6kpSDo";
+// ============================================
+
 let tickets=[
   {id:"TKT-001",name:"AlphaWolf",cat:"Bug / Problème",subject:"Impossible d'accéder au salon #général",msg:"Depuis hier soir je ne peux plus voir le salon général.",prio:"Haute",status:"open",date:"28/06/2026 21:14"},
   {id:"TKT-002",name:"Nyx_13",cat:"Sanction / Appel",subject:"Appel de mute injustifié",msg:"J'ai reçu un mute de 10 minutes que je conteste.",prio:"Moyenne",status:"in_progress",date:"28/06/2026 09:32"},
   {id:"TKT-003",name:"Soleil#4421",cat:"Support général",subject:"Comment changer mon pseudo ?",msg:"Je voudrais changer mon surnom sur le serveur.",prio:"Faible",status:"closed",date:"27/06/2026 14:05"}
 ];
 let filter="all",selectedId=null;
-let webhookUrl=localStorage.getItem("kwwh")||"";
 
 function switchTab(t){
-  ["tickets","new","config"].forEach(k=>{
+  ["tickets","new"].forEach(k=>{
     document.getElementById("tab-"+k).style.display=k===t?"block":"none";
   });
-  document.querySelectorAll(".tab").forEach((el,i)=>el.classList.toggle("active",["tickets","new","config"][i]===t));
+  document.querySelectorAll(".tab").forEach((el,i)=>el.classList.toggle("active",["tickets","new"][i]===t));
   if(t==="tickets")renderList();
-  if(t==="config"&&webhookUrl)document.getElementById("webhook-url").value=webhookUrl;
 }
 
 function setFilter(f,el){
@@ -241,8 +222,7 @@ function createTicket(){
 }
 
 async function sendToDiscord(t){
-  const url=webhookUrl||localStorage.getItem("kwwh");
-  if(!url)return;
+  if(!WEBHOOK_URL||WEBHOOK_URL==="COLLE_TON_WEBHOOK_ICI")return;
   const colors={Haute:15158332,Moyenne:16776960,Faible:3447003};
   const payload={embeds:[{
     title:"🎫 Nouveau ticket — "+t.id,
@@ -256,19 +236,10 @@ async function sendToDiscord(t){
     ],
     footer:{text:"Ticket Support KayWolfOff · "+t.date}
   }]};
-  try{await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});}catch(e){}
-}
-
-function saveWebhook(){
-  webhookUrl=document.getElementById("webhook-url").value.trim();
-  localStorage.setItem("kwwh",webhookUrl);
-  const s=document.getElementById("webhook-saved");
-  s.style.display="block";
-  setTimeout(()=>s.style.display="none",2500);
+  try{await fetch(WEBHOOK_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});}catch(e){}
 }
 
 renderList();
-if(webhookUrl)document.getElementById("webhook-url").value=webhookUrl;
 </script>
 </body>
 </html>
