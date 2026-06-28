@@ -53,6 +53,7 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 .notif{background:#0f2d1a;border:1px solid #238636;color:#3fb950;border-radius:6px;padding:10px 14px;font-size:13px;display:none;margin-bottom:12px}
 .notif.show{display:block}
 .error{color:#f85149;font-size:13px;display:none;margin-top:4px}
+.loading{text-align:center;padding:20px;color:#8b949e;font-size:13px}
 @media(max-width:600px){.layout{grid-template-columns:1fr}.row{grid-template-columns:1fr}}
 </style>
 </head>
@@ -64,7 +65,7 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
   <button class="tab" onclick="switchTab('new')">+ Nouveau ticket</button>
 </div>
 <div id="tab-tickets">
-  <div class="notif" id="notif-created">✅ Ticket créé et envoyé sur Discord !</div>
+  <div class="notif" id="notif-created">✅ Ticket créé et sauvegardé !</div>
   <div class="filters">
     <button class="filter-btn active" onclick="setFilter('all',this)">Tous</button>
     <button class="filter-btn" onclick="setFilter('open',this)">Ouverts</button>
@@ -74,7 +75,7 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
   <div class="layout">
     <div>
       <div class="section-title">Liste</div>
-      <div class="ticket-list" id="ticket-list"></div>
+      <div class="ticket-list" id="ticket-list"><div class="loading">⏳ Chargement des tickets...</div></div>
     </div>
     <div>
       <div class="section-title">Détail</div>
@@ -107,13 +108,28 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
   </div>
 </div>
 <script>
-const WH = "https://discord.com/api/webhooks/1520805025750716507/Avd7bNjbGNa1GSpMf51znVPEHMo8HVHII-bZUcafi_YqU9-X1OVu-B5LTx8SSA6kpSDo";
-let tickets=[], filter="all", selectedId=null;
+const WH="https://discord.com/api/webhooks/1520805025750716507/Avd7bNjbGNa1GSpMf51znVPEHMo8HVHII-bZUcafi_YqU9-X1OVu-B5LTx8SSA6kpSDo";
+const GS="https://script.google.com/macros/s/AKfycbxiPMARYb6jw1zrsPtt4lJDnl9wfoBfhdrmlvzdqPxl3iP7mkE_1t8xtkgBQ98083OW-g/exec";
+let tickets=[],filter="all",selectedId=null;
+
+async function loadTickets(){
+  try{
+    const r=await fetch(GS);
+    const data=await r.json();
+    tickets=data.filter(row=>row[0]).map(row=>({
+      id:row[0],date:row[1],name:row[2],cat:row[3],
+      subject:row[4],prio:row[5],msg:row[6],status:row[7]||"open"
+    })).reverse();
+    renderList();
+  }catch(e){
+    document.getElementById("ticket-list").innerHTML='<div class="empty">Aucun ticket pour l\'instant.</div>';
+  }
+}
 
 function switchTab(t){
   ["tickets","new"].forEach(k=>document.getElementById("tab-"+k).style.display=k===t?"block":"none");
   document.querySelectorAll(".tab").forEach((el,i)=>el.classList.toggle("active",["tickets","new"][i]===t));
-  if(t==="tickets")renderList();
+  if(t==="tickets"){loadTickets();}
 }
 function setFilter(f,el){
   filter=f;
@@ -138,15 +154,12 @@ function selectTicket(id){
   selectedId=id;
   const t=tickets.find(x=>x.id===id);
   renderList();
-  const actions=t.status!=="closed"
-    ?'<select id="status-sel" style="width:auto;margin:0;font-size:12px;padding:4px 8px">'
-      +'<option value="open"'+(t.status==="open"?" selected":"")+'>Ouvert</option>'
-      +'<option value="in_progress"'+(t.status==="in_progress"?" selected":"")+'>En cours</option>'
-      +'<option value="closed"'+(t.status==="closed"?" selected":"")+'>Fermé</option>'
-      +'</select>'
-      +'<button class="btn sm primary" onclick="updateStatus(\''+id+'\')">Mettre à jour</button>'
-      +'<button class="btn sm danger" onclick="deleteTicket(\''+id+'\')">🗑 Supprimer</button>'
-    :'<button class="btn sm danger" onclick="deleteTicket(\''+id+'\')">🗑 Supprimer</button>';
+  const actions='<select id="status-sel" style="width:auto;margin:0;font-size:12px;padding:4px 8px">'
+    +'<option value="open"'+(t.status==="open"?" selected":"")+'>Ouvert</option>'
+    +'<option value="in_progress"'+(t.status==="in_progress"?" selected":"")+'>En cours</option>'
+    +'<option value="closed"'+(t.status==="closed"?" selected":"")+'>Fermé</option>'
+    +'</select>'
+    +'<button class="btn sm primary" onclick="updateStatus(\''+id+'\')">Mettre à jour</button>';
   document.getElementById("ticket-detail").innerHTML='<div class="detail">'
     +'<div class="ticket-id" style="margin-bottom:6px">'+t.id+' · '+t.date+'</div>'
     +'<div class="detail-title">'+t.subject+'</div>'
@@ -159,14 +172,10 @@ function selectTicket(id){
     +'<div class="detail-footer">'+actions+'</div></div>';
 }
 function updateStatus(id){
-  tickets.find(x=>x.id===id).status=document.getElementById("status-sel").value;
+  const t=tickets.find(x=>x.id===id);
+  t.status=document.getElementById("status-sel").value;
+  fetch(GS,{method:"POST",body:JSON.stringify({action:"update",id:id,status:t.status})});
   renderList();selectTicket(id);
-}
-function deleteTicket(id){
-  tickets=tickets.filter(x=>x.id!==id);
-  selectedId=null;
-  document.getElementById("ticket-detail").innerHTML='<div class="empty">Sélectionne un ticket</div>';
-  renderList();
 }
 function createTicket(){
   const name=document.getElementById("t-name").value.trim();
@@ -177,10 +186,12 @@ function createTicket(){
   const err=document.getElementById("form-error");
   if(!name||!subject||!msg){err.style.display="block";return;}
   err.style.display="none";
-  const id="TKT-"+String(tickets.length+1).padStart(3,"0");
+  const id="TKT-"+String(Date.now()).slice(-6);
   const now=new Date().toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
   const t={id,name,cat,subject,msg,prio,status:"open",date:now};
   tickets.unshift(t);
+  renderList();
+  saveToSheets(t);
   sendToDiscord(t);
   document.getElementById("t-name").value="";
   document.getElementById("t-subject").value="";
@@ -189,6 +200,11 @@ function createTicket(){
   const n=document.getElementById("notif-created");
   n.classList.add("show");
   setTimeout(()=>n.classList.remove("show"),4000);
+}
+async function saveToSheets(t){
+  try{
+    await fetch(GS,{method:"POST",body:JSON.stringify({action:"add",id:t.id,date:t.date,name:t.name,cat:t.cat,subject:t.subject,prio:t.prio,msg:t.msg,status:t.status})});
+  }catch(e){console.error("Sheets:",e);}
 }
 async function sendToDiscord(t){
   const colors={Haute:15158332,Moyenne:16776960,Faible:3447003};
@@ -204,12 +220,9 @@ async function sendToDiscord(t){
     ],
     footer:{text:"Ticket Support KayWolfOff · "+t.date}
   }]};
-  try{
-    const r=await fetch(WH,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-    console.log("Discord response:",r.status);
-  }catch(e){console.error("Erreur webhook:",e);}
+  try{await fetch(WH,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});}catch(e){}
 }
-renderList();
+loadTickets();
 </script>
 </body>
 </html>
