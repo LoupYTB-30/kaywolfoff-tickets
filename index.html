@@ -25,7 +25,7 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 .btn.primary:hover{background:#2ea043}
 .btn.sm{padding:5px 12px;font-size:12px}
 .btn.danger{border-color:#da3633;color:#f85149;background:none}
-.btn.danger:hover{background:#21262d}
+.btn.danger:hover{background:#3d1c1c}
 .ticket-list{display:flex;flex-direction:column;gap:8px}
 .ticket{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px 16px;cursor:pointer}
 .ticket:hover,.ticket.selected{border-color:#58a6ff}
@@ -44,16 +44,21 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 .detail{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px}
 .detail-title{font-size:16px;font-weight:600;margin-bottom:8px}
 .detail-body{font-size:14px;color:#8b949e;line-height:1.6;margin:12px 0}
-.detail-footer{border-top:1px solid #30363d;padding-top:12px;margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+.detail-footer{border-top:1px solid #30363d;padding-top:12px;margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .section-title{font-size:12px;color:#8b949e;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
 .filters{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
 .filter-btn{padding:4px 12px;border:1px solid #30363d;border-radius:20px;font-size:12px;cursor:pointer;background:#161b22;color:#8b949e}
 .filter-btn.active{background:#0d2d6b;border-color:#58a6ff;color:#58a6ff}
 .empty{text-align:center;padding:30px;color:#8b949e;font-size:14px}
-.notif{background:#0f2d1a;border:1px solid #238636;color:#3fb950;border-radius:6px;padding:10px 14px;font-size:13px;display:none;margin-bottom:12px}
+.notif{border-radius:6px;padding:10px 14px;font-size:13px;display:none;margin-bottom:12px}
 .notif.show{display:block}
+.notif.success{background:#0f2d1a;border:1px solid #238636;color:#3fb950}
+.notif.error-notif{background:#3d1c1c;border:1px solid #da3633;color:#f85149}
 .error{color:#f85149;font-size:13px;display:none;margin-top:4px}
 .loading{text-align:center;padding:20px;color:#8b949e;font-size:13px}
+.admin-bar{background:#161b22;border:1px solid #30363d;border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:13px}
+.admin-badge{background:#5a3e1b;color:#d29922;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600}
+.lock-icon{color:#8b949e;font-size:16px}
 @media(max-width:600px){.layout{grid-template-columns:1fr}.row{grid-template-columns:1fr}}
 </style>
 </head>
@@ -63,9 +68,12 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 <div class="tabs">
   <button class="tab active" onclick="switchTab('tickets')">Tickets <span class="badge" id="open-count">0</span></button>
   <button class="tab" onclick="switchTab('new')">+ Nouveau ticket</button>
+  <button class="tab" onclick="switchTab('admin')">🔒 Admin</button>
 </div>
+
+<!-- ONGLET TICKETS -->
 <div id="tab-tickets">
-  <div class="notif" id="notif-created">✅ Ticket créé et sauvegardé !</div>
+  <div class="notif success" id="notif-created">✅ Ticket créé et sauvegardé !</div>
   <div class="filters">
     <button class="filter-btn active" onclick="setFilter('all',this)">Tous</button>
     <button class="filter-btn" onclick="setFilter('open',this)">Ouverts</button>
@@ -75,7 +83,7 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
   <div class="layout">
     <div>
       <div class="section-title">Liste</div>
-      <div class="ticket-list" id="ticket-list"><div class="loading">⏳ Chargement des tickets...</div></div>
+      <div class="ticket-list" id="ticket-list"><div class="loading">⏳ Chargement...</div></div>
     </div>
     <div>
       <div class="section-title">Détail</div>
@@ -83,6 +91,8 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
     </div>
   </div>
 </div>
+
+<!-- ONGLET NOUVEAU TICKET -->
 <div id="tab-new" style="display:none">
   <div style="max-width:500px">
     <div class="row">
@@ -107,59 +117,121 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
     <div class="error" id="form-error">Remplis tous les champs.</div>
   </div>
 </div>
+
+<!-- ONGLET ADMIN -->
+<div id="tab-admin" style="display:none">
+  <div id="admin-login" style="max-width:300px">
+    <label>Mot de passe admin</label>
+    <input type="password" id="admin-pwd" placeholder="Mot de passe...">
+    <button class="btn primary" onclick="checkAdmin()">🔓 Connexion</button>
+    <div class="error" id="pwd-error">Mot de passe incorrect.</div>
+  </div>
+  <div id="admin-panel" style="display:none">
+    <div class="admin-bar">
+      <span class="lock-icon">🛡️</span>
+      <span>Mode admin activé</span>
+      <span class="admin-badge">ADMIN</span>
+      <button class="btn sm danger" style="margin-left:auto" onclick="logoutAdmin()">Déconnexion</button>
+    </div>
+    <div class="filters">
+      <button class="filter-btn active" onclick="setAdminFilter('all',this)">Tous</button>
+      <button class="filter-btn" onclick="setAdminFilter('open',this)">Ouverts</button>
+      <button class="filter-btn" onclick="setAdminFilter('in_progress',this)">En cours</button>
+      <button class="filter-btn" onclick="setAdminFilter('closed',this)">Fermés</button>
+    </div>
+    <div class="layout">
+      <div>
+        <div class="section-title">Liste</div>
+        <div class="ticket-list" id="admin-ticket-list"></div>
+      </div>
+      <div>
+        <div class="section-title">Gestion</div>
+        <div id="admin-ticket-detail"><div class="empty">Sélectionne un ticket</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const WH="https://discord.com/api/webhooks/1520805025750716507/Avd7bNjbGNa1GSpMf51znVPEHMo8HVHII-bZUcafi_YqU9-X1OVu-B5LTx8SSA6kpSDo";
-const GS="https://script.google.com/macros/s/AKfycbzINq-3xMc-KmQojE-5IhgelSHh7JKhSG87LhJYJW1DdR1UynutE9LLAykYdSMjxPhKKQ/exec";
-let tickets=[],filter="all",selectedId=null;
+const GS="https://script.google.com/macros/s/AKfycbxiPMARYb6jw1zrsPtt4lJDnl9wfoBfhdrmlvzdqPxl3iP7mkE_1t8xtkgBQ98083OW-g/exec";
+const ADMIN_PASSWORD="kaywolfoff2026";
+let tickets=[],filter="all",adminFilter="all",selectedId=null,adminSelectedId=null,isAdmin=false;
+
+function formatDate(d){
+  if(!d)return"";
+  if(d.includes("T")){
+    const dt=new Date(d);
+    return dt.toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+  }
+  return d;
+}
 
 async function loadTickets(){
   try{
     const r=await fetch(GS);
     const data=await r.json();
     tickets=data.filter(row=>row[0]).map(row=>({
-      id:row[0],date:row[1],name:row[2],cat:row[3],
+      id:row[0],date:formatDate(String(row[1])),name:row[2],cat:row[3],
       subject:row[4],prio:row[5],msg:row[6],status:row[7]||"open"
     })).reverse();
     renderList();
+    if(isAdmin)renderAdminList();
   }catch(e){
     document.getElementById("ticket-list").innerHTML='<div class="empty">Aucun ticket pour l\'instant.</div>';
   }
 }
 
 function switchTab(t){
-  ["tickets","new"].forEach(k=>document.getElementById("tab-"+k).style.display=k===t?"block":"none");
-  document.querySelectorAll(".tab").forEach((el,i)=>el.classList.toggle("active",["tickets","new"][i]===t));
-  if(t==="tickets"){loadTickets();}
+  ["tickets","new","admin"].forEach(k=>document.getElementById("tab-"+k).style.display=k===t?"block":"none");
+  document.querySelectorAll(".tab").forEach((el,i)=>el.classList.toggle("active",["tickets","new","admin"][i]===t));
+  if(t==="tickets")loadTickets();
 }
+
 function setFilter(f,el){
   filter=f;
-  document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll("#tab-tickets .filter-btn").forEach(b=>b.classList.remove("active"));
   el.classList.add("active");
   renderList();
 }
+
+function setAdminFilter(f,el){
+  adminFilter=f;
+  document.querySelectorAll("#admin-panel .filter-btn").forEach(b=>b.classList.remove("active"));
+  el.classList.add("active");
+  renderAdminList();
+}
+
 function statusLabel(s){return{open:"Ouvert",in_progress:"En cours",closed:"Fermé"}[s]||s}
 function prioClass(p){return{Haute:"prio-high",Moyenne:"prio-med",Faible:"prio-low"}[p]||"prio-low"}
+
 function renderList(){
   const list=tickets.filter(t=>filter==="all"||t.status===filter);
   document.getElementById("open-count").textContent=tickets.filter(t=>t.status==="open").length;
   const el=document.getElementById("ticket-list");
-  if(!list.length){el.innerHTML='<div class="empty">Aucun ticket pour l\'instant.</div>';return;}
+  if(!list.length){el.innerHTML='<div class="empty">Aucun ticket.</div>';return;}
   el.innerHTML=list.map(t=>'<div class="ticket'+(selectedId===t.id?" selected":"")+'" onclick="selectTicket(\''+t.id+'\')">'
     +'<div class="ticket-header"><span class="ticket-id">'+t.id+'</span><span class="pill '+t.status+'">'+statusLabel(t.status)+'</span></div>'
     +'<div class="ticket-title">'+t.subject+'</div>'
     +'<div class="ticket-meta">'+t.name+' · '+t.cat+' · <span class="pill '+prioClass(t.prio)+'">'+t.prio+'</span></div>'
     +'</div>').join("");
 }
+
+function renderAdminList(){
+  const list=tickets.filter(t=>adminFilter==="all"||t.status===adminFilter);
+  const el=document.getElementById("admin-ticket-list");
+  if(!list.length){el.innerHTML='<div class="empty">Aucun ticket.</div>';return;}
+  el.innerHTML=list.map(t=>'<div class="ticket'+(adminSelectedId===t.id?" selected":"")+'" onclick="selectAdminTicket(\''+t.id+'\')">'
+    +'<div class="ticket-header"><span class="ticket-id">'+t.id+'</span><span class="pill '+t.status+'">'+statusLabel(t.status)+'</span></div>'
+    +'<div class="ticket-title">'+t.subject+'</div>'
+    +'<div class="ticket-meta">'+t.name+' · '+t.cat+' · <span class="pill '+prioClass(t.prio)+'">'+t.prio+'</span></div>'
+    +'</div>').join("");
+}
+
 function selectTicket(id){
   selectedId=id;
   const t=tickets.find(x=>x.id===id);
   renderList();
-  const actions='<select id="status-sel" style="width:auto;margin:0;font-size:12px;padding:4px 8px">'
-    +'<option value="open"'+(t.status==="open"?" selected":"")+'>Ouvert</option>'
-    +'<option value="in_progress"'+(t.status==="in_progress"?" selected":"")+'>En cours</option>'
-    +'<option value="closed"'+(t.status==="closed"?" selected":"")+'>Fermé</option>'
-    +'</select>'
-    +'<button class="btn sm primary" onclick="updateStatus(\''+id+'\')">Mettre à jour</button>';
   document.getElementById("ticket-detail").innerHTML='<div class="detail">'
     +'<div class="ticket-id" style="margin-bottom:6px">'+t.id+' · '+t.date+'</div>'
     +'<div class="detail-title">'+t.subject+'</div>'
@@ -169,14 +241,71 @@ function selectTicket(id){
     +'<span style="font-size:12px;color:#8b949e">'+t.cat+'</span></div>'
     +'<div style="font-size:12px;color:#8b949e;margin-bottom:4px">De : <strong style="color:#e6edf3">'+t.name+'</strong></div>'
     +'<div class="detail-body">'+t.msg+'</div>'
-    +'<div class="detail-footer">'+actions+'</div></div>';
+    +'</div>';
 }
+
+function selectAdminTicket(id){
+  adminSelectedId=id;
+  const t=tickets.find(x=>x.id===id);
+  renderAdminList();
+  document.getElementById("admin-ticket-detail").innerHTML='<div class="detail">'
+    +'<div class="ticket-id" style="margin-bottom:6px">'+t.id+' · '+t.date+'</div>'
+    +'<div class="detail-title">'+t.subject+'</div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0">'
+    +'<span class="pill '+t.status+'">'+statusLabel(t.status)+'</span>'
+    +'<span class="pill '+prioClass(t.prio)+'">'+t.prio+'</span>'
+    +'<span style="font-size:12px;color:#8b949e">'+t.cat+'</span></div>'
+    +'<div style="font-size:12px;color:#8b949e;margin-bottom:4px">De : <strong style="color:#e6edf3">'+t.name+'</strong></div>'
+    +'<div class="detail-body">'+t.msg+'</div>'
+    +'<div class="detail-footer">'
+    +'<select id="admin-status-sel" style="width:auto;margin:0;font-size:12px;padding:4px 8px">'
+    +'<option value="open"'+(t.status==="open"?" selected":"")+'>Ouvert</option>'
+    +'<option value="in_progress"'+(t.status==="in_progress"?" selected":"")+'>En cours</option>'
+    +'<option value="closed"'+(t.status==="closed"?" selected":"")+'>Fermé</option>'
+    +'</select>'
+    +'<button class="btn sm primary" onclick="updateStatus(\''+id+'\')">Mettre à jour</button>'
+    +'<button class="btn sm danger" onclick="deleteTicket(\''+id+'\')">🗑 Supprimer</button>'
+    +'</div></div>';
+}
+
 function updateStatus(id){
   const t=tickets.find(x=>x.id===id);
-  t.status=document.getElementById("status-sel").value;
+  t.status=document.getElementById("admin-status-sel").value;
   fetch(GS,{method:"POST",body:JSON.stringify({action:"update",id:id,status:t.status})});
-  renderList();selectTicket(id);
+  renderAdminList();
+  selectAdminTicket(id);
 }
+
+function deleteTicket(id){
+  if(!confirm("Supprimer ce ticket ?"))return;
+  fetch(GS,{method:"POST",body:JSON.stringify({action:"delete",id:id})});
+  tickets=tickets.filter(x=>x.id!==id);
+  adminSelectedId=null;
+  document.getElementById("admin-ticket-detail").innerHTML='<div class="empty">Sélectionne un ticket</div>';
+  renderAdminList();
+  renderList();
+}
+
+function checkAdmin(){
+  const pwd=document.getElementById("admin-pwd").value;
+  if(pwd===ADMIN_PASSWORD){
+    isAdmin=true;
+    document.getElementById("admin-login").style.display="none";
+    document.getElementById("admin-panel").style.display="block";
+    document.getElementById("pwd-error").style.display="none";
+    loadTickets();
+  }else{
+    document.getElementById("pwd-error").style.display="block";
+  }
+}
+
+function logoutAdmin(){
+  isAdmin=false;
+  document.getElementById("admin-login").style.display="block";
+  document.getElementById("admin-panel").style.display="none";
+  document.getElementById("admin-pwd").value="";
+}
+
 function createTicket(){
   const name=document.getElementById("t-name").value.trim();
   const subject=document.getElementById("t-subject").value.trim();
@@ -201,11 +330,13 @@ function createTicket(){
   n.classList.add("show");
   setTimeout(()=>n.classList.remove("show"),4000);
 }
+
 async function saveToSheets(t){
   try{
     await fetch(GS,{method:"POST",body:JSON.stringify({action:"add",id:t.id,date:t.date,name:t.name,cat:t.cat,subject:t.subject,prio:t.prio,msg:t.msg,status:t.status})});
   }catch(e){console.error("Sheets:",e);}
 }
+
 async function sendToDiscord(t){
   const colors={Haute:15158332,Moyenne:16776960,Faible:3447003};
   const payload={embeds:[{
@@ -222,6 +353,8 @@ async function sendToDiscord(t){
   }]};
   try{await fetch(WH,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});}catch(e){}
 }
+
+document.getElementById("admin-pwd").addEventListener("keydown",function(e){if(e.key==="Enter")checkAdmin();});
 loadTickets();
 </script>
 </body>
