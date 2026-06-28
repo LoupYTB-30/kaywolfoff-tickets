@@ -112,16 +112,9 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 </div>
 
 <script>
-// ============================================
-// METS TON WEBHOOK DISCORD ICI (seul toi peux modifier ce code sur GitHub)
 const WEBHOOK_URL = "https://discord.com/api/webhooks/1520805025750716507/Avd7bNjbGNa1GSpMf51znVPEHMo8HVHII-bZUcafi_YqU9-X1OVu-B5LTx8SSA6kpSDo";
-// ============================================
 
-let tickets=[
-  {id:"TKT-001",name:"AlphaWolf",cat:"Bug / Problème",subject:"Impossible d'accéder au salon #général",msg:"Depuis hier soir je ne peux plus voir le salon général.",prio:"Haute",status:"open",date:"28/06/2026 21:14"},
-  {id:"TKT-002",name:"Nyx_13",cat:"Sanction / Appel",subject:"Appel de mute injustifié",msg:"J'ai reçu un mute de 10 minutes que je conteste.",prio:"Moyenne",status:"in_progress",date:"28/06/2026 09:32"},
-  {id:"TKT-003",name:"Soleil#4421",cat:"Support général",subject:"Comment changer mon pseudo ?",msg:"Je voudrais changer mon surnom sur le serveur.",prio:"Faible",status:"closed",date:"27/06/2026 14:05"}
-];
+let tickets=[];
 let filter="all",selectedId=null;
 
 function switchTab(t){
@@ -146,7 +139,7 @@ function renderList(){
   const list=tickets.filter(t=>filter==="all"||t.status===filter);
   document.getElementById("open-count").textContent=tickets.filter(t=>t.status==="open").length;
   const el=document.getElementById("ticket-list");
-  if(!list.length){el.innerHTML='<div class="empty">Aucun ticket.</div>';return;}
+  if(!list.length){el.innerHTML='<div class="empty">Aucun ticket pour l\'instant.</div>';return;}
   el.innerHTML=list.map(t=>`
     <div class="ticket${selectedId===t.id?" selected":""}" onclick="selectTicket('${t.id}')">
       <div class="ticket-header">
