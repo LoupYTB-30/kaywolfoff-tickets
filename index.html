@@ -1,22 +1,274 @@
-async function sendToDiscord(ticket) {
-  const payload = {
-    embeds: [{
-      title: `🎫 Nouveau ticket — ${ticket.id}`,
-      color: ticket.prio === "Haute" ? 15158332
-           : ticket.prio === "Moyenne" ? 16776960 : 3447003,
-      fields: [
-        { name: "Sujet",     value: ticket.subject },
-        { name: "De",        value: ticket.name,   inline: true },
-        { name: "Catégorie", value: ticket.cat,    inline: true },
-        { name: "Priorité",  value: ticket.prio,   inline: true },
-        { name: "Message",   value: ticket.msg }
-      ],
-      footer: { text: "Ticket Support · " + new Date().toLocaleString("fr-FR") }
-    }]
-  };
-  await fetch("https://discord.com/api/webhooks/1520792034271821844/Ss_aSlRsyGnqNyt1XY1au_5oP1s865NB3jx-Bud73QvL0qfTJPGQ1b66fXtx5WyDInqf", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support KayWolfOff — Tickets</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh;padding:20px}
+h1{text-align:center;font-size:22px;margin-bottom:8px;color:#fff}
+.subtitle{text-align:center;font-size:14px;color:#8b949e;margin-bottom:24px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid #30363d;margin-bottom:20px}
+.tab{padding:8px 16px;font-size:14px;cursor:pointer;border:none;background:none;color:#8b949e;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.active{color:#58a6ff;border-bottom-color:#58a6ff}
+.tab:hover:not(.active){color:#e6edf3}
+.badge{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;font-size:11px;background:#da3633;color:#fff;margin-left:5px}
+input,select,textarea{font-family:Arial,sans-serif;background:#161b22;border:1px solid #30363d;border-radius:6px;color:#e6edf3;padding:8px 12px;width:100%;font-size:14px;margin-bottom:10px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#58a6ff}
+textarea{resize:vertical;min-height:90px}
+label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn{padding:9px 18px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid #30363d;background:#21262d;color:#e6edf3}
+.btn:hover{background:#30363d}
+.btn.primary{background:#238636;border-color:#2ea043;color:#fff}
+.btn.primary:hover{background:#2ea043}
+.btn.sm{padding:5px 12px;font-size:12px}
+.btn.danger{border-color:#da3633;color:#f85149;background:none}
+.btn.danger:hover{background:#21262d}
+.ticket-list{display:flex;flex-direction:column;gap:8px}
+.ticket{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px 16px;cursor:pointer}
+.ticket:hover,.ticket.selected{border-color:#58a6ff}
+.ticket-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.ticket-id{font-size:11px;color:#8b949e;font-family:monospace}
+.ticket-title{font-size:14px;font-weight:600;margin-bottom:4px}
+.ticket-meta{font-size:12px;color:#8b949e}
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.open{background:#0d419d;color:#58a6ff}
+.in_progress{background:#5a3e1b;color:#d29922}
+.closed{background:#0f2d1a;color:#3fb950}
+.prio-high{background:#490202;color:#f85149}
+.prio-med{background:#5a3e1b;color:#d29922}
+.prio-low{background:#21262d;color:#8b949e}
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.detail{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px}
+.detail-title{font-size:16px;font-weight:600;margin-bottom:8px}
+.detail-body{font-size:14px;color:#8b949e;line-height:1.6;margin:12px 0}
+.detail-footer{border-top:1px solid #30363d;padding-top:12px;margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+.section-title{font-size:12px;color:#8b949e;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.filters{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.filter-btn{padding:4px 12px;border:1px solid #30363d;border-radius:20px;font-size:12px;cursor:pointer;background:#161b22;color:#8b949e}
+.filter-btn.active{background:#0d2d6b;border-color:#58a6ff;color:#58a6ff}
+.empty{text-align:center;padding:30px;color:#8b949e;font-size:14px}
+.notif{background:#0f2d1a;border:1px solid #238636;color:#3fb950;border-radius:6px;padding:10px 14px;font-size:13px;display:none;margin-bottom:12px}
+.notif.show{display:block}
+.error{color:#f85149;font-size:13px;display:none;margin-top:4px}
+.config-box{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px;margin-bottom:16px}
+.config-label{font-size:12px;color:#8b949e;margin-bottom:6px}
+.saved{color:#3fb950;font-size:12px;margin-top:4px;display:none}
+.code-block{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:12px;font-family:monospace;font-size:11px;color:#8b949e;overflow-x:auto;white-space:pre;line-height:1.6;margin-top:8px}
+@media(max-width:600px){.layout{grid-template-columns:1fr}.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<h1>🎫 Support KayWolfOff</h1>
+<p class="subtitle">Système de tickets — envoie ta demande, on te répond sur Discord</p>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('tickets')">Tickets <span class="badge" id="open-count">0</span></button>
+  <button class="tab" onclick="switchTab('new')">+ Nouveau ticket</button>
+  <button class="tab" onclick="switchTab('config')">⚙️ Config</button>
+</div>
+
+<div id="tab-tickets">
+  <div class="notif" id="notif-created">✅ Ticket créé et envoyé sur Discord !</div>
+  <div class="filters">
+    <button class="filter-btn active" onclick="setFilter('all',this)">Tous</button>
+    <button class="filter-btn" onclick="setFilter('open',this)">Ouverts</button>
+    <button class="filter-btn" onclick="setFilter('in_progress',this)">En cours</button>
+    <button class="filter-btn" onclick="setFilter('closed',this)">Fermés</button>
+  </div>
+  <div class="layout">
+    <div>
+      <div class="section-title">Liste</div>
+      <div class="ticket-list" id="ticket-list"></div>
+    </div>
+    <div>
+      <div class="section-title">Détail</div>
+      <div id="ticket-detail"><div class="empty">Sélectionne un ticket</div></div>
+    </div>
+  </div>
+</div>
+
+<div id="tab-new" style="display:none">
+  <div style="max-width:500px">
+    <div class="row">
+      <div><label>Nom / Pseudo Discord</label><input type="text" id="t-name" placeholder="Ton pseudo"></div>
+      <div><label>Catégorie</label>
+        <select id="t-cat">
+          <option>Support général</option>
+          <option>Bug / Problème</option>
+          <option>Demande de partenariat</option>
+          <option>Sanction / Appel</option>
+          <option>Autre</option>
+        </select>
+      </div>
+    </div>
+    <label>Sujet</label>
+    <input type="text" id="t-subject" placeholder="Résume ton problème">
+    <label>Priorité</label>
+    <select id="t-prio"><option>Faible</option><option selected>Moyenne</option><option>Haute</option></select>
+    <label>Description</label>
+    <textarea id="t-msg" placeholder="Explique en détail..."></textarea>
+    <button class="btn primary" onclick="createTicket()">📨 Envoyer le ticket</button>
+    <div class="error" id="form-error">Remplis tous les champs.</div>
+  </div>
+</div>
+
+<div id="tab-config" style="display:none">
+  <div style="max-width:500px">
+    <div class="config-box">
+      <div class="config-label">URL du webhook Discord</div>
+      <input type="text" id="webhook-url" placeholder="https://discord.com/api/webhooks/...">
+      <button class="btn sm primary" onclick="saveWebhook()">Enregistrer</button>
+      <div class="saved" id="webhook-saved">✅ Webhook enregistré !</div>
+    </div>
+    <div class="section-title">Guide d'intégration Google Sites</div>
+    <div style="font-size:13px;color:#8b949e;line-height:1.8">
+      1. Dans Google Sites → <strong style="color:#e6edf3">Intégrer → URL</strong><br>
+      2. Colle l'URL de cette page GitHub Pages<br>
+      3. Les tickets arrivent dans ton salon Discord
+    </div>
+  </div>
+</div>
+
+<script>
+let tickets=[
+  {id:"TKT-001",name:"AlphaWolf",cat:"Bug / Problème",subject:"Impossible d'accéder au salon #général",msg:"Depuis hier soir je ne peux plus voir le salon général.",prio:"Haute",status:"open",date:"28/06/2026 21:14"},
+  {id:"TKT-002",name:"Nyx_13",cat:"Sanction / Appel",subject:"Appel de mute injustifié",msg:"J'ai reçu un mute de 10 minutes que je conteste.",prio:"Moyenne",status:"in_progress",date:"28/06/2026 09:32"},
+  {id:"TKT-003",name:"Soleil#4421",cat:"Support général",subject:"Comment changer mon pseudo ?",msg:"Je voudrais changer mon surnom sur le serveur.",prio:"Faible",status:"closed",date:"27/06/2026 14:05"}
+];
+let filter="all",selectedId=null;
+let webhookUrl=localStorage.getItem("kwwh")||"";
+
+function switchTab(t){
+  ["tickets","new","config"].forEach(k=>{
+    document.getElementById("tab-"+k).style.display=k===t?"block":"none";
   });
+  document.querySelectorAll(".tab").forEach((el,i)=>el.classList.toggle("active",["tickets","new","config"][i]===t));
+  if(t==="tickets")renderList();
+  if(t==="config"&&webhookUrl)document.getElementById("webhook-url").value=webhookUrl;
 }
+
+function setFilter(f,el){
+  filter=f;
+  document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
+  el.classList.add("active");
+  renderList();
+}
+
+function statusLabel(s){return{open:"Ouvert",in_progress:"En cours",closed:"Fermé"}[s]||s}
+function prioClass(p){return{Haute:"prio-high",Moyenne:"prio-med",Faible:"prio-low"}[p]||"prio-low"}
+
+function renderList(){
+  const list=tickets.filter(t=>filter==="all"||t.status===filter);
+  document.getElementById("open-count").textContent=tickets.filter(t=>t.status==="open").length;
+  const el=document.getElementById("ticket-list");
+  if(!list.length){el.innerHTML='<div class="empty">Aucun ticket.</div>';return;}
+  el.innerHTML=list.map(t=>`
+    <div class="ticket${selectedId===t.id?" selected":""}" onclick="selectTicket('${t.id}')">
+      <div class="ticket-header">
+        <span class="ticket-id">${t.id}</span>
+        <span class="pill ${t.status}">${statusLabel(t.status)}</span>
+      </div>
+      <div class="ticket-title">${t.subject}</div>
+      <div class="ticket-meta">${t.name} · ${t.cat} · <span class="pill ${prioClass(t.prio)}">${t.prio}</span></div>
+    </div>`).join("");
+}
+
+function selectTicket(id){
+  selectedId=id;
+  const t=tickets.find(x=>x.id===id);
+  renderList();
+  const actions=t.status!=="closed"
+    ?`<select id="status-sel" style="width:auto;margin:0;font-size:12px;padding:4px 8px">
+        <option value="open"${t.status==="open"?" selected":""}>Ouvert</option>
+        <option value="in_progress"${t.status==="in_progress"?" selected":""}>En cours</option>
+        <option value="closed"${t.status==="closed"?" selected":""}>Fermé</option>
+      </select>
+      <button class="btn sm primary" onclick="updateStatus('${id}')">Mettre à jour</button>
+      <button class="btn sm danger" onclick="deleteTicket('${id}')">🗑 Supprimer</button>`
+    :`<button class="btn sm danger" onclick="deleteTicket('${id}')">🗑 Supprimer</button>`;
+  document.getElementById("ticket-detail").innerHTML=`
+    <div class="detail">
+      <div class="ticket-id" style="margin-bottom:6px">${t.id} · ${t.date}</div>
+      <div class="detail-title">${t.subject}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0">
+        <span class="pill ${t.status}">${statusLabel(t.status)}</span>
+        <span class="pill ${prioClass(t.prio)}">${t.prio}</span>
+        <span style="font-size:12px;color:#8b949e">${t.cat}</span>
+      </div>
+      <div style="font-size:12px;color:#8b949e;margin-bottom:4px">De : <strong style="color:#e6edf3">${t.name}</strong></div>
+      <div class="detail-body">${t.msg}</div>
+      <div class="detail-footer">${actions}</div>
+    </div>`;
+}
+
+function updateStatus(id){
+  tickets.find(x=>x.id===id).status=document.getElementById("status-sel").value;
+  renderList();selectTicket(id);
+}
+
+function deleteTicket(id){
+  tickets=tickets.filter(x=>x.id!==id);
+  selectedId=null;
+  document.getElementById("ticket-detail").innerHTML='<div class="empty">Sélectionne un ticket</div>';
+  renderList();
+}
+
+function createTicket(){
+  const name=document.getElementById("t-name").value.trim();
+  const subject=document.getElementById("t-subject").value.trim();
+  const msg=document.getElementById("t-msg").value.trim();
+  const cat=document.getElementById("t-cat").value;
+  const prio=document.getElementById("t-prio").value;
+  const err=document.getElementById("form-error");
+  if(!name||!subject||!msg){err.style.display="block";return;}
+  err.style.display="none";
+  const id="TKT-"+String(tickets.length+1).padStart(3,"0");
+  const now=new Date().toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+  const t={id,name,cat,subject,msg,prio,status:"open",date:now};
+  tickets.unshift(t);
+  sendToDiscord(t);
+  document.getElementById("t-name").value="";
+  document.getElementById("t-subject").value="";
+  document.getElementById("t-msg").value="";
+  switchTab("tickets");
+  const n=document.getElementById("notif-created");
+  n.classList.add("show");
+  setTimeout(()=>n.classList.remove("show"),4000);
+}
+
+async function sendToDiscord(t){
+  const url=webhookUrl||localStorage.getItem("kwwh");
+  if(!url)return;
+  const colors={Haute:15158332,Moyenne:16776960,Faible:3447003};
+  const payload={embeds:[{
+    title:"🎫 Nouveau ticket — "+t.id,
+    color:colors[t.prio]||3447003,
+    fields:[
+      {name:"Sujet",value:t.subject},
+      {name:"De",value:t.name,inline:true},
+      {name:"Catégorie",value:t.cat,inline:true},
+      {name:"Priorité",value:t.prio,inline:true},
+      {name:"Message",value:t.msg}
+    ],
+    footer:{text:"Ticket Support KayWolfOff · "+t.date}
+  }]};
+  try{await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});}catch(e){}
+}
+
+function saveWebhook(){
+  webhookUrl=document.getElementById("webhook-url").value.trim();
+  localStorage.setItem("kwwh",webhookUrl);
+  const s=document.getElementById("webhook-saved");
+  s.style.display="block";
+  setTimeout(()=>s.style.display="none",2500);
+}
+
+renderList();
+if(webhookUrl)document.getElementById("webhook-url").value=webhookUrl;
+</script>
+</body>
+</html>
