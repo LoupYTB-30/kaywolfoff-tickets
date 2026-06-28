@@ -57,15 +57,12 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 </style>
 </head>
 <body>
-
 <h1>🎫 Support KayWolfOff</h1>
 <p class="subtitle">Système de tickets — envoie ta demande, on te répond sur Discord</p>
-
 <div class="tabs">
   <button class="tab active" onclick="switchTab('tickets')">Tickets <span class="badge" id="open-count">0</span></button>
   <button class="tab" onclick="switchTab('new')">+ Nouveau ticket</button>
 </div>
-
 <div id="tab-tickets">
   <div class="notif" id="notif-created">✅ Ticket créé et envoyé sur Discord !</div>
   <div class="filters">
@@ -85,7 +82,6 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
     </div>
   </div>
 </div>
-
 <div id="tab-new" style="display:none">
   <div style="max-width:500px">
     <div class="row">
@@ -110,87 +106,68 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
     <div class="error" id="form-error">Remplis tous les champs.</div>
   </div>
 </div>
-
 <script>
-const WEBHOOK_URL = "https://discord.com/api/webhooks/1520805025750716507/Avd7bNjbGNa1GSpMf51znVPEHMo8HVHII-bZUcafi_YqU9-X1OVu-B5LTx8SSA6kpSDo";
-
-let tickets=[];
-let filter="all",selectedId=null;
+const WH = "https://discord.com/api/webhooks/1520805025750716507/Avd7bNjbGNa1GSpMf51znVPEHMo8HVHII-bZUcafi_YqU9-X1OVu-B5LTx8SSA6kpSDo";
+let tickets=[], filter="all", selectedId=null;
 
 function switchTab(t){
-  ["tickets","new"].forEach(k=>{
-    document.getElementById("tab-"+k).style.display=k===t?"block":"none";
-  });
+  ["tickets","new"].forEach(k=>document.getElementById("tab-"+k).style.display=k===t?"block":"none");
   document.querySelectorAll(".tab").forEach((el,i)=>el.classList.toggle("active",["tickets","new"][i]===t));
   if(t==="tickets")renderList();
 }
-
 function setFilter(f,el){
   filter=f;
   document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
   el.classList.add("active");
   renderList();
 }
-
 function statusLabel(s){return{open:"Ouvert",in_progress:"En cours",closed:"Fermé"}[s]||s}
 function prioClass(p){return{Haute:"prio-high",Moyenne:"prio-med",Faible:"prio-low"}[p]||"prio-low"}
-
 function renderList(){
   const list=tickets.filter(t=>filter==="all"||t.status===filter);
   document.getElementById("open-count").textContent=tickets.filter(t=>t.status==="open").length;
   const el=document.getElementById("ticket-list");
   if(!list.length){el.innerHTML='<div class="empty">Aucun ticket pour l\'instant.</div>';return;}
-  el.innerHTML=list.map(t=>`
-    <div class="ticket${selectedId===t.id?" selected":""}" onclick="selectTicket('${t.id}')">
-      <div class="ticket-header">
-        <span class="ticket-id">${t.id}</span>
-        <span class="pill ${t.status}">${statusLabel(t.status)}</span>
-      </div>
-      <div class="ticket-title">${t.subject}</div>
-      <div class="ticket-meta">${t.name} · ${t.cat} · <span class="pill ${prioClass(t.prio)}">${t.prio}</span></div>
-    </div>`).join("");
+  el.innerHTML=list.map(t=>'<div class="ticket'+(selectedId===t.id?" selected":"")+'" onclick="selectTicket(\''+t.id+'\')">'
+    +'<div class="ticket-header"><span class="ticket-id">'+t.id+'</span><span class="pill '+t.status+'">'+statusLabel(t.status)+'</span></div>'
+    +'<div class="ticket-title">'+t.subject+'</div>'
+    +'<div class="ticket-meta">'+t.name+' · '+t.cat+' · <span class="pill '+prioClass(t.prio)+'">'+t.prio+'</span></div>'
+    +'</div>').join("");
 }
-
 function selectTicket(id){
   selectedId=id;
   const t=tickets.find(x=>x.id===id);
   renderList();
   const actions=t.status!=="closed"
-    ?`<select id="status-sel" style="width:auto;margin:0;font-size:12px;padding:4px 8px">
-        <option value="open"${t.status==="open"?" selected":""}>Ouvert</option>
-        <option value="in_progress"${t.status==="in_progress"?" selected":""}>En cours</option>
-        <option value="closed"${t.status==="closed"?" selected":""}>Fermé</option>
-      </select>
-      <button class="btn sm primary" onclick="updateStatus('${id}')">Mettre à jour</button>
-      <button class="btn sm danger" onclick="deleteTicket('${id}')">🗑 Supprimer</button>`
-    :`<button class="btn sm danger" onclick="deleteTicket('${id}')">🗑 Supprimer</button>`;
-  document.getElementById("ticket-detail").innerHTML=`
-    <div class="detail">
-      <div class="ticket-id" style="margin-bottom:6px">${t.id} · ${t.date}</div>
-      <div class="detail-title">${t.subject}</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0">
-        <span class="pill ${t.status}">${statusLabel(t.status)}</span>
-        <span class="pill ${prioClass(t.prio)}">${t.prio}</span>
-        <span style="font-size:12px;color:#8b949e">${t.cat}</span>
-      </div>
-      <div style="font-size:12px;color:#8b949e;margin-bottom:4px">De : <strong style="color:#e6edf3">${t.name}</strong></div>
-      <div class="detail-body">${t.msg}</div>
-      <div class="detail-footer">${actions}</div>
-    </div>`;
+    ?'<select id="status-sel" style="width:auto;margin:0;font-size:12px;padding:4px 8px">'
+      +'<option value="open"'+(t.status==="open"?" selected":"")+'>Ouvert</option>'
+      +'<option value="in_progress"'+(t.status==="in_progress"?" selected":"")+'>En cours</option>'
+      +'<option value="closed"'+(t.status==="closed"?" selected":"")+'>Fermé</option>'
+      +'</select>'
+      +'<button class="btn sm primary" onclick="updateStatus(\''+id+'\')">Mettre à jour</button>'
+      +'<button class="btn sm danger" onclick="deleteTicket(\''+id+'\')">🗑 Supprimer</button>'
+    :'<button class="btn sm danger" onclick="deleteTicket(\''+id+'\')">🗑 Supprimer</button>';
+  document.getElementById("ticket-detail").innerHTML='<div class="detail">'
+    +'<div class="ticket-id" style="margin-bottom:6px">'+t.id+' · '+t.date+'</div>'
+    +'<div class="detail-title">'+t.subject+'</div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0">'
+    +'<span class="pill '+t.status+'">'+statusLabel(t.status)+'</span>'
+    +'<span class="pill '+prioClass(t.prio)+'">'+t.prio+'</span>'
+    +'<span style="font-size:12px;color:#8b949e">'+t.cat+'</span></div>'
+    +'<div style="font-size:12px;color:#8b949e;margin-bottom:4px">De : <strong style="color:#e6edf3">'+t.name+'</strong></div>'
+    +'<div class="detail-body">'+t.msg+'</div>'
+    +'<div class="detail-footer">'+actions+'</div></div>';
 }
-
 function updateStatus(id){
   tickets.find(x=>x.id===id).status=document.getElementById("status-sel").value;
   renderList();selectTicket(id);
 }
-
 function deleteTicket(id){
   tickets=tickets.filter(x=>x.id!==id);
   selectedId=null;
   document.getElementById("ticket-detail").innerHTML='<div class="empty">Sélectionne un ticket</div>';
   renderList();
 }
-
 function createTicket(){
   const name=document.getElementById("t-name").value.trim();
   const subject=document.getElementById("t-subject").value.trim();
@@ -213,9 +190,7 @@ function createTicket(){
   n.classList.add("show");
   setTimeout(()=>n.classList.remove("show"),4000);
 }
-
 async function sendToDiscord(t){
-  if(!WEBHOOK_URL||WEBHOOK_URL==="COLLE_TON_WEBHOOK_ICI")return;
   const colors={Haute:15158332,Moyenne:16776960,Faible:3447003};
   const payload={embeds:[{
     title:"🎫 Nouveau ticket — "+t.id,
@@ -229,9 +204,11 @@ async function sendToDiscord(t){
     ],
     footer:{text:"Ticket Support KayWolfOff · "+t.date}
   }]};
-  try{await fetch(WEBHOOK_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});}catch(e){}
+  try{
+    const r=await fetch(WH,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    console.log("Discord response:",r.status);
+  }catch(e){console.error("Erreur webhook:",e);}
 }
-
 renderList();
 </script>
 </body>
