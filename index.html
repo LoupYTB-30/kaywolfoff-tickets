@@ -9,7 +9,7 @@
 body{font-family:Arial,sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh;padding:20px}
 h1{text-align:center;font-size:22px;margin-bottom:8px;color:#fff}
 .subtitle{text-align:center;font-size:14px;color:#8b949e;margin-bottom:24px}
-.tabs{display:flex;gap:4px;border-bottom:1px solid #30363d;margin-bottom:20px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid #30363d;margin-bottom:20px;flex-wrap:wrap}
 .tab{padding:8px 16px;font-size:14px;cursor:pointer;border:none;background:none;color:#8b949e;border-bottom:2px solid transparent;margin-bottom:-1px}
 .tab.active{color:#58a6ff;border-bottom-color:#58a6ff}
 .tab:hover:not(.active){color:#e6edf3}
@@ -60,11 +60,11 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 .reply-box{background:#0d2d6b22;border:1px solid #1f3a6e;border-radius:8px;padding:12px;margin-top:12px}
 .reply-box .reply-label{font-size:11px;color:#58a6ff;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
 .reply-box .reply-text{font-size:14px;color:#e6edf3;line-height:1.6}
-.reply-box .reply-date{font-size:11px;color:#8b949e;margin-top:4px}
 .reply-input-box{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px;margin-top:12px}
 .reply-input-box label{font-size:12px;color:#58a6ff;font-weight:600;margin-bottom:6px}
 .search-box{display:flex;gap:8px;margin-bottom:16px;max-width:400px}
 .search-box input{margin:0}
+.discord-hint{font-size:12px;color:#8b949e;margin-top:-6px;margin-bottom:10px}
 @media(max-width:600px){.layout{grid-template-columns:1fr}.row{grid-template-columns:1fr}}
 </style>
 </head>
@@ -78,9 +78,8 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
   <button class="tab" onclick="switchTab('admin')">🔒 Admin</button>
 </div>
 
-<!-- ONGLET TICKETS -->
 <div id="tab-tickets">
-  <div class="notif success" id="notif-created">✅ Ticket créé ! Note ton ID pour suivre ta demande.</div>
+  <div class="notif success" id="notif-created"></div>
   <div class="filters">
     <button class="filter-btn active" onclick="setFilter('all',this)">Tous</button>
     <button class="filter-btn" onclick="setFilter('open',this)">Ouverts</button>
@@ -99,20 +98,23 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
   </div>
 </div>
 
-<!-- ONGLET NOUVEAU TICKET -->
 <div id="tab-new" style="display:none">
   <div style="max-width:500px">
     <div class="row">
-      <div><label>Nom / Pseudo Discord</label><input type="text" id="t-name" placeholder="Ton pseudo"></div>
-      <div><label>Catégorie</label>
-        <select id="t-cat">
-          <option>Support général</option>
-          <option>Bug / Problème</option>
-          <option>Demande de partenariat</option>
-          <option>Sanction / Appel</option>
-          <option>Autre</option>
-        </select>
+      <div><label>Nom / Pseudo</label><input type="text" id="t-name" placeholder="Ton pseudo"></div>
+      <div><label>Tag Discord</label>
+        <input type="text" id="t-discord" placeholder="ex: LoupYTB_">
+        <div class="discord-hint">⚠️ Requis pour recevoir la réponse sur Discord</div>
       </div>
+    </div>
+    <div><label>Catégorie</label>
+      <select id="t-cat">
+        <option>Support général</option>
+        <option>Bug / Problème</option>
+        <option>Demande de partenariat</option>
+        <option>Sanction / Appel</option>
+        <option>Autre</option>
+      </select>
     </div>
     <label>Sujet</label>
     <input type="text" id="t-subject" placeholder="Résume ton problème">
@@ -121,11 +123,10 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
     <label>Description</label>
     <textarea id="t-msg" placeholder="Explique en détail..."></textarea>
     <button class="btn primary" onclick="createTicket()">📨 Envoyer le ticket</button>
-    <div class="error" id="form-error">Remplis tous les champs.</div>
+    <div class="error" id="form-error">Remplis tous les champs obligatoires.</div>
   </div>
 </div>
 
-<!-- ONGLET SUIVRE MON TICKET -->
 <div id="tab-suivre" style="display:none">
   <div style="max-width:500px">
     <p style="font-size:14px;color:#8b949e;margin-bottom:14px">Entre ton ID de ticket pour voir son statut et la réponse de l'équipe.</p>
@@ -137,7 +138,6 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
   </div>
 </div>
 
-<!-- ONGLET ADMIN -->
 <div id="tab-admin" style="display:none">
   <div id="admin-login" style="max-width:300px">
     <label>Mot de passe admin</label>
@@ -147,8 +147,7 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
   </div>
   <div id="admin-panel" style="display:none">
     <div class="admin-bar">
-      <span>🛡️</span>
-      <span>Mode admin activé</span>
+      <span>🛡️</span><span>Mode admin activé</span>
       <span class="admin-badge">ADMIN</span>
       <button class="btn sm danger" style="margin-left:auto" onclick="logoutAdmin()">Déconnexion</button>
     </div>
@@ -173,7 +172,7 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 
 <script>
 const WH="https://discord.com/api/webhooks/1520805025750716507/Avd7bNjbGNa1GSpMf51znVPEHMo8HVHII-bZUcafi_YqU9-X1OVu-B5LTx8SSA6kpSDo";
-const GS="https://script.google.com/macros/s/AKfycby3wKXcRf8ElBh4oSv3orm3hQhw523MDzlwDil5bJnPveinARxURx1lNDoFM43vZc71Ig/exec";
+const GS="https://script.google.com/macros/s/AKfycbxiPMARYb6jw1zrsPtt4lJDnl9wfoBfhdrmlvzdqPxl3iP7mkE_1t8xtkgBQ98083OW-g/exec";
 const ADMIN_PASSWORD="kaywolfoff2026";
 let tickets=[],filter="all",adminFilter="all",selectedId=null,adminSelectedId=null,isAdmin=false;
 
@@ -192,7 +191,8 @@ async function loadTickets(){
     const data=await r.json();
     tickets=data.filter(row=>row[0]).map(row=>({
       id:row[0],date:formatDate(row[1]),name:row[2],cat:row[3],
-      subject:row[4],prio:row[5],msg:row[6],status:row[7]||"open",reply:row[8]||""
+      subject:row[4],prio:row[5],msg:row[6],status:row[7]||"open",
+      reply:row[8]||"",discord:row[9]||""
     })).reverse();
     renderList();
     if(isAdmin)renderAdminList();
@@ -210,41 +210,23 @@ function switchTab(t){
 function setFilter(f,el){
   filter=f;
   document.querySelectorAll("#tab-tickets .filter-btn").forEach(b=>b.classList.remove("active"));
-  el.classList.add("active");
-  renderList();
+  el.classList.add("active");renderList();
 }
-
 function setAdminFilter(f,el){
   adminFilter=f;
   document.querySelectorAll("#admin-panel .filter-btn").forEach(b=>b.classList.remove("active"));
-  el.classList.add("active");
-  renderAdminList();
+  el.classList.add("active");renderAdminList();
 }
 
 function statusLabel(s){return{open:"Ouvert",in_progress:"En cours",closed:"Fermé"}[s]||s}
 function prioClass(p){return{Haute:"prio-high",Moyenne:"prio-med",Faible:"prio-low"}[p]||"prio-low"}
 
-function renderList(){
-  const list=tickets.filter(t=>filter==="all"||t.status===filter);
-  document.getElementById("open-count").textContent=tickets.filter(t=>t.status==="open").length;
-  const el=document.getElementById("ticket-list");
-  if(!list.length){el.innerHTML='<div class="empty">Aucun ticket.</div>';return;}
-  el.innerHTML=list.map(t=>'<div class="ticket'+(selectedId===t.id?" selected":"")+'" onclick="selectTicket(\''+t.id+'\')">'
+function ticketCard(t,selectedVar,onclick){
+  return '<div class="ticket'+(selectedVar===t.id?" selected":"")+'" onclick="'+onclick+'(\''+t.id+'\')">'
     +'<div class="ticket-header"><span class="ticket-id">'+t.id+'</span><span class="pill '+t.status+'">'+statusLabel(t.status)+'</span></div>'
     +'<div class="ticket-title">'+t.subject+'</div>'
     +'<div class="ticket-meta">'+t.name+' · '+t.cat+' · <span class="pill '+prioClass(t.prio)+'">'+t.prio+'</span></div>'
-    +'</div>').join("");
-}
-
-function renderAdminList(){
-  const list=tickets.filter(t=>adminFilter==="all"||t.status===adminFilter);
-  const el=document.getElementById("admin-ticket-list");
-  if(!list.length){el.innerHTML='<div class="empty">Aucun ticket.</div>';return;}
-  el.innerHTML=list.map(t=>'<div class="ticket'+(adminSelectedId===t.id?" selected":"")+'" onclick="selectAdminTicket(\''+t.id+'\')">'
-    +'<div class="ticket-header"><span class="ticket-id">'+t.id+'</span><span class="pill '+t.status+'">'+statusLabel(t.status)+'</span></div>'
-    +'<div class="ticket-title">'+t.subject+'</div>'
-    +'<div class="ticket-meta">'+t.name+' · '+t.cat+' · <span class="pill '+prioClass(t.prio)+'">'+t.prio+'</span></div>'
-    +'</div>').join("");
+    +'</div>';
 }
 
 function ticketDetailHTML(t){
@@ -255,18 +237,34 @@ function ticketDetailHTML(t){
     +'<span class="pill '+t.status+'">'+statusLabel(t.status)+'</span>'
     +'<span class="pill '+prioClass(t.prio)+'">'+t.prio+'</span>'
     +'<span style="font-size:12px;color:#8b949e">'+t.cat+'</span></div>'
-    +'<div style="font-size:12px;color:#8b949e;margin-bottom:4px">De : <strong style="color:#e6edf3">'+t.name+'</strong></div>'
+    +'<div style="font-size:12px;color:#8b949e;margin-bottom:4px">De : <strong style="color:#e6edf3">'+t.name+'</strong>'
+    +(t.discord?' <span style="color:#5865f2">(@'+t.discord+')</span>':'')+'</div>'
     +'<div class="detail-body">'+t.msg+'</div>'
-    +(t.reply?'<div class="reply-box"><div class="reply-label">💬 Réponse de l\'équipe</div><div class="reply-text">'+t.reply+'</div></div>'
+    +(t.reply
+      ?'<div class="reply-box"><div class="reply-label">💬 Réponse de l\'équipe</div><div class="reply-text">'+t.reply+'</div></div>'
       :'<div style="font-size:12px;color:#8b949e;margin-top:10px;font-style:italic">En attente de réponse de l\'équipe...</div>')
     +'</div>';
 }
 
+function renderList(){
+  const list=tickets.filter(t=>filter==="all"||t.status===filter);
+  document.getElementById("open-count").textContent=tickets.filter(t=>t.status==="open").length;
+  const el=document.getElementById("ticket-list");
+  if(!list.length){el.innerHTML='<div class="empty">Aucun ticket.</div>';return;}
+  el.innerHTML=list.map(t=>ticketCard(t,selectedId,"selectTicket")).join("");
+}
+
+function renderAdminList(){
+  const list=tickets.filter(t=>adminFilter==="all"||t.status===adminFilter);
+  const el=document.getElementById("admin-ticket-list");
+  if(!list.length){el.innerHTML='<div class="empty">Aucun ticket.</div>';return;}
+  el.innerHTML=list.map(t=>ticketCard(t,adminSelectedId,"selectAdminTicket")).join("");
+}
+
 function selectTicket(id){
   selectedId=id;
-  const t=tickets.find(x=>x.id===id);
   renderList();
-  document.getElementById("ticket-detail").innerHTML=ticketDetailHTML(t);
+  document.getElementById("ticket-detail").innerHTML=ticketDetailHTML(tickets.find(x=>x.id===id));
 }
 
 function selectAdminTicket(id){
@@ -280,52 +278,70 @@ function selectAdminTicket(id){
     +'<span class="pill '+t.status+'">'+statusLabel(t.status)+'</span>'
     +'<span class="pill '+prioClass(t.prio)+'">'+t.prio+'</span>'
     +'<span style="font-size:12px;color:#8b949e">'+t.cat+'</span></div>'
-    +'<div style="font-size:12px;color:#8b949e;margin-bottom:4px">De : <strong style="color:#e6edf3">'+t.name+'</strong></div>'
+    +'<div style="font-size:12px;color:#8b949e;margin-bottom:8px">De : <strong style="color:#e6edf3">'+t.name+'</strong>'
+    +(t.discord?' <span style="color:#5865f2">(@'+t.discord+')</span>':'')+'</div>'
     +'<div class="detail-body">'+t.msg+'</div>'
     +(t.reply?'<div class="reply-box"><div class="reply-label">💬 Réponse actuelle</div><div class="reply-text">'+t.reply+'</div></div>':'')
     +'<div class="reply-input-box">'
     +'<label>✏️ Répondre à ce ticket</label>'
     +'<textarea id="admin-reply-txt" placeholder="Écris ta réponse ici...">'+t.reply+'</textarea>'
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
     +'<select id="admin-status-sel" style="width:auto;margin:0;font-size:12px;padding:4px 8px">'
     +'<option value="open"'+(t.status==="open"?" selected":"")+'>Ouvert</option>'
     +'<option value="in_progress"'+(t.status==="in_progress"?" selected":"")+'>En cours</option>'
     +'<option value="closed"'+(t.status==="closed"?" selected":"")+'>Fermé</option>'
     +'</select>'
-    +'<button class="btn sm primary" onclick="saveReply(\''+id+'\')">💾 Enregistrer</button>'
+    +'<button class="btn sm primary" onclick="saveReply(\''+id+'\')">💾 Enregistrer + Notifier</button>'
     +'<button class="btn sm danger" onclick="deleteTicket(\''+id+'\')">🗑 Supprimer</button>'
     +'</div></div></div>';
 }
 
 function saveReply(id){
   const t=tickets.find(x=>x.id===id);
-  t.reply=document.getElementById("admin-reply-txt").value;
-  t.status=document.getElementById("admin-status-sel").value;
-  fetch(GS,{method:"POST",body:JSON.stringify({action:"reply",id:id,reply:t.reply})});
-  fetch(GS,{method:"POST",body:JSON.stringify({action:"update",id:id,status:t.status})});
+  const newReply=document.getElementById("admin-reply-txt").value;
+  const newStatus=document.getElementById("admin-status-sel").value;
+  t.reply=newReply;
+  t.status=newStatus;
+  fetch(GS,{method:"POST",body:JSON.stringify({action:"reply",id:id,reply:newReply})});
+  fetch(GS,{method:"POST",body:JSON.stringify({action:"update",id:id,status:newStatus})});
+  if(newReply)notifyDiscord(t,newReply);
   renderAdminList();
   selectAdminTicket(id);
+}
+
+async function notifyDiscord(t,reply){
+  const mention=t.discord?"@"+t.discord+" ":"";
+  const payload={
+    content:mention,
+    embeds:[{
+      title:"💬 Réponse à ton ticket — "+t.id,
+      color:3447003,
+      fields:[
+        {name:"Ton sujet",value:t.subject},
+        {name:"Réponse de l'équipe",value:reply},
+        {name:"Statut",value:statusLabel(t.status),inline:true}
+      ],
+      footer:{text:"Support KayWolfOff — consulte ton ticket sur le site pour plus de détails"}
+    }]
+  };
+  try{await fetch(WH,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});}
+  catch(e){console.error("Discord:",e);}
 }
 
 function deleteTicket(id){
   fetch(GS,{method:"POST",body:JSON.stringify({action:"delete",id:id})});
   tickets=tickets.filter(x=>x.id!==id);
-  adminSelectedId=null;
-  selectedId=null;
+  adminSelectedId=null;selectedId=null;
   document.getElementById("admin-ticket-detail").innerHTML='<div class="empty">Sélectionne un ticket</div>';
   document.getElementById("ticket-detail").innerHTML='<div class="empty">Sélectionne un ticket</div>';
-  renderAdminList();
-  renderList();
+  renderAdminList();renderList();
 }
 
 function searchTicket(){
-  const searchId=document.getElementById("search-id").value.trim().toUpperCase();
-  const t=tickets.find(x=>x.id===searchId);
+  const sid=document.getElementById("search-id").value.trim().toUpperCase();
+  const t=tickets.find(x=>x.id===sid);
   const el=document.getElementById("search-result");
-  if(!t){
-    el.innerHTML='<div style="color:#f85149;font-size:14px;margin-top:10px">❌ Ticket introuvable. Vérifie ton ID.</div>';
-    return;
-  }
+  if(!t){el.innerHTML='<div style="color:#f85149;font-size:14px;margin-top:10px">❌ Ticket introuvable. Vérifie ton ID.</div>';return;}
   el.innerHTML=ticketDetailHTML(t);
 }
 
@@ -337,9 +353,7 @@ function checkAdmin(){
     document.getElementById("admin-panel").style.display="block";
     document.getElementById("pwd-error").style.display="none";
     loadTickets();
-  }else{
-    document.getElementById("pwd-error").style.display="block";
-  }
+  }else{document.getElementById("pwd-error").style.display="block";}
 }
 
 function logoutAdmin(){
@@ -351,32 +365,34 @@ function logoutAdmin(){
 
 function createTicket(){
   const name=document.getElementById("t-name").value.trim();
+  const discord=document.getElementById("t-discord").value.trim();
   const subject=document.getElementById("t-subject").value.trim();
   const msg=document.getElementById("t-msg").value.trim();
   const cat=document.getElementById("t-cat").value;
   const prio=document.getElementById("t-prio").value;
   const err=document.getElementById("form-error");
-  if(!name||!subject||!msg){err.style.display="block";return;}
+  if(!name||!discord||!subject||!msg){err.style.display="block";return;}
   err.style.display="none";
   const id="TKT-"+String(Date.now()).slice(-6);
   const now=new Date().toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
-  const t={id,name,cat,subject,msg,prio,status:"open",date:now,reply:""};
+  const t={id,name,discord,cat,subject,msg,prio,status:"open",date:now,reply:""};
   tickets.unshift(t);
   renderList();
   saveToSheets(t);
   sendToDiscord(t);
   document.getElementById("t-name").value="";
+  document.getElementById("t-discord").value="";
   document.getElementById("t-subject").value="";
   document.getElementById("t-msg").value="";
   switchTab("tickets");
   const n=document.getElementById("notif-created");
+  n.innerHTML="✅ Ticket créé ! Ton ID : <strong>"+id+"</strong> — note-le pour suivre ta demande dans l'onglet 🔍";
   n.classList.add("show");
-  n.innerHTML="✅ Ticket créé ! Ton ID : <strong>"+id+"</strong> — note-le pour suivre ta demande.";
-  setTimeout(()=>n.classList.remove("show"),8000);
+  setTimeout(()=>n.classList.remove("show"),10000);
 }
 
 async function saveToSheets(t){
-  try{await fetch(GS,{method:"POST",body:JSON.stringify({action:"add",id:t.id,date:t.date,name:t.name,cat:t.cat,subject:t.subject,prio:t.prio,msg:t.msg,status:t.status})});}
+  try{await fetch(GS,{method:"POST",body:JSON.stringify({action:"add",id:t.id,date:t.date,name:t.name,cat:t.cat,subject:t.subject,prio:t.prio,msg:t.msg,status:t.status,discord:t.discord})});}
   catch(e){console.error("Sheets:",e);}
 }
 
@@ -387,7 +403,7 @@ async function sendToDiscord(t){
     color:colors[t.prio]||3447003,
     fields:[
       {name:"Sujet",value:t.subject},
-      {name:"De",value:t.name,inline:true},
+      {name:"De",value:t.name+" (@"+t.discord+")",inline:true},
       {name:"Catégorie",value:t.cat,inline:true},
       {name:"Priorité",value:t.prio,inline:true},
       {name:"Message",value:t.msg}
@@ -397,8 +413,8 @@ async function sendToDiscord(t){
   try{await fetch(WH,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});}catch(e){}
 }
 
-document.getElementById("admin-pwd").addEventListener("keydown",function(e){if(e.key==="Enter")checkAdmin();});
-document.getElementById("search-id").addEventListener("keydown",function(e){if(e.key==="Enter")searchTicket();});
+document.getElementById("admin-pwd").addEventListener("keydown",e=>{if(e.key==="Enter")checkAdmin();});
+document.getElementById("search-id").addEventListener("keydown",e=>{if(e.key==="Enter")searchTicket();});
 loadTickets();
 </script>
 </body>
