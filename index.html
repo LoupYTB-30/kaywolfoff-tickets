@@ -1,3 +1,7 @@
+
+SHEETS="https://script.google.com/macros/s/AKfycbxiPMARYb6jw1zrsPtt4lJDnl9wfoBfhdrmlvzdqPxl3iP7mkE_1t8xtkgBQ98083OW-g/exec"
+
+cat > /mnt/user-data/outputs/index.html << 'ENDOFFILE'
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -19,7 +23,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#58a6ff}
 textarea{resize:vertical;min-height:80px}
 label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 .hint{font-size:12px;color:#8b949e;margin-top:-6px;margin-bottom:10px;line-height:1.5}
-.hint a{color:#58a6ff;text-decoration:none}
 .btn{padding:9px 18px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid #30363d;background:#21262d;color:#e6edf3}
 .btn:hover{background:#30363d}
 .btn.primary{background:#238636;border-color:#2ea043;color:#fff}
@@ -41,6 +44,7 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 .prio-high{background:#490202;color:#f85149}
 .prio-med{background:#5a3e1b;color:#d29922}
 .prio-low{background:#21262d;color:#8b949e}
+.assigned{background:#2d1b69;color:#a78bfa;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px}
 .layout{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .detail{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px}
 .detail-title{font-size:16px;font-weight:600;margin-bottom:8px}
@@ -111,7 +115,7 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
     <input type="text" id="t-discord" placeholder="ex: LoupYTB_">
     <label>ID Discord</label>
     <input type="text" id="t-discordid" placeholder="ex: 123456789012345678">
-    <div class="hint">⚠️ Requis pour recevoir une vraie notification Discord quand on te répond</div>
+    <div class="hint">⚠️ Requis pour recevoir une vraie notification Discord</div>
     <label>Catégorie</label>
     <select id="t-cat">
       <option>Support général</option>
@@ -127,7 +131,7 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
     <label>Description</label>
     <textarea id="t-msg" placeholder="Explique en détail..."></textarea>
     <button class="btn primary" onclick="createTicket()">📨 Envoyer le ticket</button>
-    <div class="error" id="form-error">Remplis tous les champs obligatoires.</div>
+    <div class="error" id="form-error">Remplis tous les champs.</div>
   </div>
 </div>
 
@@ -144,15 +148,19 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 
 <div id="tab-admin" style="display:none">
   <div id="admin-login" style="max-width:300px">
+    <label>Ton pseudo (staff)</label>
+    <input type="text" id="admin-name" placeholder="ex: LoupYTB_">
     <label>Mot de passe admin</label>
     <input type="password" id="admin-pwd" placeholder="Mot de passe...">
     <button class="btn primary" onclick="checkAdmin()">🔓 Connexion</button>
-    <div class="error" id="pwd-error">Mot de passe incorrect.</div>
+    <div class="error" id="pwd-error">Mot de passe incorrect ou pseudo manquant.</div>
   </div>
   <div id="admin-panel" style="display:none">
     <div class="admin-bar">
-      <span>🛡️</span><span>Mode admin activé</span>
-      <span class="admin-badge">ADMIN</span>
+      <span>🛡️</span>
+      <span>Mode admin activé —</span>
+      <span id="admin-name-display" style="color:#a78bfa;font-weight:600"></span>
+      <span class="admin-badge">STAFF</span>
       <button class="btn sm danger" style="margin-left:auto" onclick="logoutAdmin()">Déconnexion</button>
     </div>
     <div class="filters">
@@ -177,16 +185,13 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 <script>
 const WH="https://discord.com/api/webhooks/1520805025750716507/Avd7bNjbGNa1GSpMf51znVPEHMo8HVHII-bZUcafi_YqU9-X1OVu-B5LTx8SSA6kpSDo";
 const WH_REPLY="https://discord.com/api/webhooks/1521086023487193159/VtbcLhraaqtOvzPiSLsjvlsaiJLUi1oBJDv2TWuEOYHD_8tHihUF87FORM5620g6bdCZ";
-const GS="https://script.google.com/macros/s/AKfycby-ZwB7MhVVjuIbVOSfDxG6IA3afHmmeJWQXQJvdTt7omwr6QcemlH13ByFfJV3epyZSg/exec";
+const GS="https://script.google.com/macros/s/AKfycbxiPMARYb6jw1zrsPtt4lJDnl9wfoBfhdrmlvzdqPxl3iP7mkE_1t8xtkgBQ98083OW-g/exec";
 const ADMIN_PASSWORD="kaywolfoff2026";
-let tickets=[],filter="all",adminFilter="all",selectedId=null,adminSelectedId=null,isAdmin=false;
+let tickets=[],filter="all",adminFilter="all",selectedId=null,adminSelectedId=null,isAdmin=false,adminPseudo="";
 
 function formatDate(d){
   if(!d)return"";
-  if(String(d).includes("T")){
-    const dt=new Date(d);
-    return dt.toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
-  }
+  if(String(d).includes("T")){const dt=new Date(d);return dt.toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});}
   return String(d);
 }
 
@@ -197,7 +202,8 @@ async function loadTickets(){
     tickets=data.filter(row=>row[0]).map(row=>({
       id:row[0],date:formatDate(row[1]),name:row[2]||"",cat:row[3],
       subject:row[4],prio:row[5],msg:row[6],status:row[7]||"open",
-      reply:row[8]||"",discord:row[9]||"",discordid:row[10]||""
+      reply:row[8]||"",discord:row[9]||"",discordid:row[10]||"",
+      assignee:row[11]||""
     })).reverse();
     renderList();
     if(isAdmin)renderAdminList();
@@ -215,24 +221,28 @@ function switchTab(t){
 function setFilter(f,el){filter=f;document.querySelectorAll("#tab-tickets .filter-btn").forEach(b=>b.classList.remove("active"));el.classList.add("active");renderList();}
 function setAdminFilter(f,el){adminFilter=f;document.querySelectorAll("#admin-panel .filter-btn").forEach(b=>b.classList.remove("active"));el.classList.add("active");renderAdminList();}
 function statusLabel(s){return{open:"Ouvert",in_progress:"En cours",closed:"Fermé"}[s]||s}
+function statusIcon(s){return{open:"🔵",in_progress:"🟡",closed:"🟢"}[s]||""}
 function prioClass(p){return{Haute:"prio-high",Moyenne:"prio-med",Faible:"prio-low"}[p]||"prio-low"}
 
 function ticketCard(t,sel,fn){
   return '<div class="ticket'+(sel===t.id?" selected":"")+'" onclick="'+fn+'(\''+t.id+'\')">'
     +'<div class="ticket-header"><span class="ticket-id">'+t.id+'</span><span class="pill '+t.status+'">'+statusLabel(t.status)+'</span></div>'
     +'<div class="ticket-title">'+t.subject+'</div>'
-    +'<div class="ticket-meta">@'+t.discord+' · '+t.cat+' · <span class="pill '+prioClass(t.prio)+'">'+t.prio+'</span></div>'
-    +'</div>';
+    +'<div class="ticket-meta" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">@'+t.discord+' · '+t.cat+' · <span class="pill '+prioClass(t.prio)+'">'+t.prio+'</span>'
+    +(t.assignee?'<span class="assigned">👤 '+t.assignee+'</span>':'')
+    +'</div></div>';
 }
 
 function ticketDetailHTML(t){
   return '<div class="detail">'
     +'<div class="ticket-id" style="margin-bottom:6px">'+t.id+' · '+t.date+'</div>'
     +'<div class="detail-title">'+t.subject+'</div>'
-    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0">'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;align-items:center">'
     +'<span class="pill '+t.status+'">'+statusLabel(t.status)+'</span>'
     +'<span class="pill '+prioClass(t.prio)+'">'+t.prio+'</span>'
-    +'<span style="font-size:12px;color:#8b949e">'+t.cat+'</span></div>'
+    +'<span style="font-size:12px;color:#8b949e">'+t.cat+'</span>'
+    +(t.assignee?'<span class="assigned">👤 '+t.assignee+'</span>':'')
+    +'</div>'
     +'<div style="font-size:12px;color:#5865f2;margin-bottom:8px">@'+t.discord+'</div>'
     +'<div class="detail-body">'+t.msg+'</div>'
     +(t.reply
@@ -268,23 +278,28 @@ function selectAdminTicket(id){
   document.getElementById("admin-ticket-detail").innerHTML='<div class="detail">'
     +'<div class="ticket-id" style="margin-bottom:6px">'+t.id+' · '+t.date+'</div>'
     +'<div class="detail-title">'+t.subject+'</div>'
-    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0">'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;align-items:center">'
     +'<span class="pill '+t.status+'">'+statusLabel(t.status)+'</span>'
     +'<span class="pill '+prioClass(t.prio)+'">'+t.prio+'</span>'
-    +'<span style="font-size:12px;color:#8b949e">'+t.cat+'</span></div>'
+    +'<span style="font-size:12px;color:#8b949e">'+t.cat+'</span>'
+    +(t.assignee?'<span class="assigned">👤 '+t.assignee+'</span>':'')
+    +'</div>'
     +'<div style="font-size:12px;color:#5865f2;margin-bottom:4px">@'+t.discord+'</div>'
     +(t.discordid?'<div style="font-size:11px;color:#8b949e;margin-bottom:8px;font-family:monospace">ID: '+t.discordid+'</div>':'')
     +'<div class="detail-body">'+t.msg+'</div>'
     +(t.reply?'<div class="reply-box"><div class="reply-label">💬 Réponse actuelle</div><div class="reply-text">'+t.reply+'</div></div>':'')
     +'<div class="reply-input-box">'
-    +'<label>✏️ Répondre à ce ticket</label>'
+    +'<label>👤 Assigné à</label>'
+    +'<input id="admin-assignee" type="text" value="'+(t.assignee||adminPseudo)+'" placeholder="Pseudo du staff qui prend en charge" style="margin-bottom:8px">'
+    +'<label>🔄 Statut</label>'
+    +'<select id="admin-status-sel" style="margin-bottom:8px">'
+    +'<option value="open"'+(t.status==="open"?" selected":"")+'>🔵 Ouvert</option>'
+    +'<option value="in_progress"'+(t.status==="in_progress"?" selected":"")+'>🟡 En cours</option>'
+    +'<option value="closed"'+(t.status==="closed"?" selected":"")+'>🟢 Fermé</option>'
+    +'</select>'
+    +'<label>✏️ Réponse</label>'
     +'<textarea id="admin-reply-txt" placeholder="Écris ta réponse ici...">'+t.reply+'</textarea>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:4px">'
-    +'<select id="admin-status-sel" style="width:auto;margin:0;font-size:12px;padding:4px 8px">'
-    +'<option value="open"'+(t.status==="open"?" selected":"")+'>Ouvert</option>'
-    +'<option value="in_progress"'+(t.status==="in_progress"?" selected":"")+'>En cours</option>'
-    +'<option value="closed"'+(t.status==="closed"?" selected":"")+'>Fermé</option>'
-    +'</select>'
     +'<button class="btn sm primary" onclick="saveReply(\''+id+'\')">💾 Enregistrer + Notifier</button>'
     +'<button class="btn sm danger" onclick="deleteTicket(\''+id+'\')">🗑 Supprimer</button>'
     +'</div></div></div>';
@@ -294,30 +309,56 @@ function saveReply(id){
   const t=tickets.find(x=>x.id===id);
   const newReply=document.getElementById("admin-reply-txt").value;
   const newStatus=document.getElementById("admin-status-sel").value;
-  t.reply=newReply;t.status=newStatus;
+  const newAssignee=document.getElementById("admin-assignee").value;
+  const oldStatus=t.status;
+  t.reply=newReply;t.status=newStatus;t.assignee=newAssignee;
   fetch(GS,{method:"POST",body:JSON.stringify({action:"reply",id:id,reply:newReply})});
   fetch(GS,{method:"POST",body:JSON.stringify({action:"update",id:id,status:newStatus})});
+  fetch(GS,{method:"POST",body:JSON.stringify({action:"assign",id:id,assignee:newAssignee})});
   if(newReply)notifyReply(t,newReply);
+  if(newStatus!==oldStatus)notifyStatus(t,oldStatus,newStatus);
   renderAdminList();selectAdminTicket(id);
 }
 
 async function notifyReply(t,reply){
   const mention=t.discordid?"<@"+t.discordid+">":"@"+t.discord;
   const payload={
-    content:mention+" — Une réponse a été apportée à ton ticket !",
+    content:mention+" — 💬 L'équipe a répondu à ton ticket !",
     embeds:[{
       title:"💬 Réponse à ton ticket — "+t.id,
       color:3447003,
       fields:[
-        {name:"Ton sujet",value:t.subject},
+        {name:"Sujet",value:t.subject},
         {name:"Réponse de l'équipe",value:reply},
-        {name:"Statut",value:statusLabel(t.status),inline:true}
+        {name:"Statut",value:statusIcon(t.status)+" "+statusLabel(t.status),inline:true},
+        {name:"Pris en charge par",value:"👤 "+(t.assignee||"Équipe KayWolfOff"),inline:true}
       ],
-      footer:{text:"Support KayWolfOff — utilise l'onglet 🔍 Suivre mon ticket avec l'ID "+t.id}
+      footer:{text:"Support KayWolfOff — onglet 🔍 Suivre mon ticket avec l'ID "+t.id}
     }]
   };
   try{await fetch(WH_REPLY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});}
-  catch(e){console.error("Discord reply:",e);}
+  catch(e){console.error(e);}
+}
+
+async function notifyStatus(t,oldStatus,newStatus){
+  const mention=t.discordid?"<@"+t.discordid+">":"@"+t.discord;
+  const colors={open:3447003,in_progress:16776960,closed:3066993};
+  const payload={
+    content:mention+" — 🔔 Le statut de ton ticket a changé !",
+    embeds:[{
+      title:"🔔 Mise à jour du ticket — "+t.id,
+      color:colors[newStatus]||3447003,
+      fields:[
+        {name:"Sujet",value:t.subject},
+        {name:"Ancien statut",value:statusIcon(oldStatus)+" "+statusLabel(oldStatus),inline:true},
+        {name:"Nouveau statut",value:statusIcon(newStatus)+" "+statusLabel(newStatus),inline:true},
+        {name:"Pris en charge par",value:"👤 "+(t.assignee||"Équipe KayWolfOff"),inline:true}
+      ],
+      footer:{text:"Support KayWolfOff — onglet 🔍 Suivre mon ticket avec l'ID "+t.id}
+    }]
+  };
+  try{await fetch(WH_REPLY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});}
+  catch(e){console.error(e);}
 }
 
 function deleteTicket(id){
@@ -339,20 +380,23 @@ function searchTicket(){
 
 function checkAdmin(){
   const pwd=document.getElementById("admin-pwd").value;
-  if(pwd===ADMIN_PASSWORD){
-    isAdmin=true;
+  const name=document.getElementById("admin-name").value.trim();
+  if(pwd===ADMIN_PASSWORD&&name){
+    isAdmin=true;adminPseudo=name;
     document.getElementById("admin-login").style.display="none";
     document.getElementById("admin-panel").style.display="block";
     document.getElementById("pwd-error").style.display="none";
+    document.getElementById("admin-name-display").textContent=name;
     loadTickets();
   }else{document.getElementById("pwd-error").style.display="block";}
 }
 
 function logoutAdmin(){
-  isAdmin=false;
+  isAdmin=false;adminPseudo="";
   document.getElementById("admin-login").style.display="block";
   document.getElementById("admin-panel").style.display="none";
   document.getElementById("admin-pwd").value="";
+  document.getElementById("admin-name").value="";
 }
 
 function createTicket(){
@@ -367,7 +411,7 @@ function createTicket(){
   err.style.display="none";
   const id="TKT-"+String(Date.now()).slice(-6);
   const now=new Date().toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
-  const t={id,name:"",discord,discordid,cat,subject,msg,prio,status:"open",date:now,reply:""};
+  const t={id,name:"",discord,discordid,cat,subject,msg,prio,status:"open",date:now,reply:"",assignee:""};
   tickets.unshift(t);renderList();
   saveToSheets(t);sendToDiscord(t);
   document.getElementById("t-discord").value="";
@@ -382,8 +426,8 @@ function createTicket(){
 }
 
 async function saveToSheets(t){
-  try{await fetch(GS,{method:"POST",body:JSON.stringify({action:"add",id:t.id,date:t.date,name:t.name,cat:t.cat,subject:t.subject,prio:t.prio,msg:t.msg,status:t.status,discord:t.discord,discordid:t.discordid})});}
-  catch(e){console.error("Sheets:",e);}
+  try{await fetch(GS,{method:"POST",body:JSON.stringify({action:"add",id:t.id,date:t.date,name:t.name,cat:t.cat,subject:t.subject,prio:t.prio,msg:t.msg,status:t.status,discord:t.discord,discordid:t.discordid,assignee:""})});}
+  catch(e){console.error(e);}
 }
 
 async function sendToDiscord(t){
