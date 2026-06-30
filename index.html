@@ -181,7 +181,7 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 <script>
 const WH="https://discord.com/api/webhooks/1520805025750716507/Avd7bNjbGNa1GSpMf51znVPEHMo8HVHII-bZUcafi_YqU9-X1OVu-B5LTx8SSA6kpSDo";
 const WH_REPLY="https://discord.com/api/webhooks/1521086023487193159/VtbcLhraaqtOvzPiSLsjvlsaiJLUi1oBJDv2TWuEOYHD_8tHihUF87FORM5620g6bdCZ";
-const GS="https://script.google.com/macros/s/AKfycbxiPMARYb6jw1zrsPtt4lJDnl9wfoBfhdrmlvzdqPxl3iP7mkE_1t8xtkgBQ98083OW-g/exec";
+const GS="https://script.google.com/macros/s/AKfycbzSjs5N4W4e6QYOeeU6aDfJtYUeY9tG2sLfYFIW1sNGw2bV_t9PVtZEF6f62ePEkkgfEQ/exec";
 const ADMIN_PASSWORD="kaywolfoff2026";
 let tickets=[],filter="all",adminFilter="all",selectedId=null,adminSelectedId=null,isAdmin=false,adminPseudo="";
 
@@ -428,7 +428,7 @@ async function saveToSheets(t){
 
 async function sendToDiscord(t){
   const colors={Haute:15158332,Moyenne:16776960,Faible:3447003};
-  const payload={embeds:[{
+  const payload={content:"<@&1496526102544515159> — 🎫 Nouveau ticket à traiter !",embeds:[{
     title:"🎫 Nouveau ticket — "+t.id,
     color:colors[t.prio]||3447003,
     fields:[
