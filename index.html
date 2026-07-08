@@ -66,12 +66,15 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 .search-box input{margin:0}
 .guide-box{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px;margin-bottom:16px;font-size:13px;line-height:1.8;color:#8b949e}
 .guide-box strong{color:#e6edf3}
+.lang-btn{position:fixed;top:16px;right:16px;padding:6px 12px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #30363d;background:#161b22;color:#e6edf3;z-index:999}
+.lang-btn:hover{background:#21262d}
 @media(max-width:600px){.layout{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
+<button class="lang-btn" id="lang-toggle" onclick="toggleLang()">🇬🇧 English</button>
 <h1>🎫 Support KayWolfOff</h1>
-<p class="subtitle">Système de tickets — envoie ta demande, on te répond sur Discord</p>
+<p class="subtitle" id="txt-subtitle">Système de tickets — envoie ta demande, on te répond sur Discord</p>
 <div class="tabs">
   <button class="tab active" onclick="switchTab('tickets')">Tickets <span class="badge" id="open-count">0</span></button>
   <button class="tab" onclick="switchTab('new')">+ Nouveau ticket</button>
@@ -181,7 +184,7 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 <script>
 const WH="https://discord.com/api/webhooks/1520805025750716507/Avd7bNjbGNa1GSpMf51znVPEHMo8HVHII-bZUcafi_YqU9-X1OVu-B5LTx8SSA6kpSDo";
 const WH_REPLY="https://discord.com/api/webhooks/1521086023487193159/VtbcLhraaqtOvzPiSLsjvlsaiJLUi1oBJDv2TWuEOYHD_8tHihUF87FORM5620g6bdCZ";
-const GS="https://script.google.com/macros/s/AKfycbzSjs5N4W4e6QYOeeU6aDfJtYUeY9tG2sLfYFIW1sNGw2bV_t9PVtZEF6f62ePEkkgfEQ/exec";
+const GS="https://script.google.com/macros/s/AKfycbxiPMARYb6jw1zrsPtt4lJDnl9wfoBfhdrmlvzdqPxl3iP7mkE_1t8xtkgBQ98083OW-g/exec";
 const ADMIN_PASSWORD="kaywolfoff2026";
 let tickets=[],filter="all",adminFilter="all",selectedId=null,adminSelectedId=null,isAdmin=false,adminPseudo="";
 
@@ -445,6 +448,134 @@ async function sendToDiscord(t){
 
 document.getElementById("admin-pwd").addEventListener("keydown",e=>{if(e.key==="Enter")checkAdmin();});
 document.getElementById("search-id").addEventListener("keydown",e=>{if(e.key==="Enter")searchTicket();});
+
+// ===== SYSTÈME DE TRADUCTION =====
+let lang="fr";
+const translations={
+  fr:{
+    subtitle:"Système de tickets — envoie ta demande, on te répond sur Discord",
+    tab_tickets:"Tickets",tab_new:"+ Nouveau ticket",tab_suivre:"🔍 Suivre mon ticket",tab_admin:"🔒 Admin",
+    filter_all:"Tous",filter_open:"Ouverts",filter_progress:"En cours",filter_closed:"Fermés",
+    detail_empty:"Sélectionne un ticket",
+    form_discord_tag:"Tag Discord (pseudo)",form_discord_id:"ID Discord",
+    form_discord_hint:"⚠️ Requis pour recevoir une vraie notification Discord",
+    form_cat:"Catégorie",form_subject:"Sujet",form_prio:"Priorité",form_msg:"Description",
+    form_send:"📨 Envoyer le ticket",form_error:"Remplis tous les champs.",
+    form_prio_low:"Faible",form_prio_med:"Moyenne",form_prio_high:"Haute",
+    form_cat1:"Support général",form_cat2:"Bug / Problème",form_cat3:"Demande de partenariat",form_cat4:"Sanction / Appel",form_cat5:"Autre",
+    guide_title:"📋 Comment trouver ton ID Discord ?",
+    guide_step1:"1. Dans Discord → <strong>Paramètres → Avancé → Active le Mode développeur</strong>",
+    guide_step2:"2. Clic droit sur ton avatar → <strong>Copier l'identifiant</strong>",
+    guide_step3:"L'ID ressemble à : <strong>123456789012345678</strong>",
+    suivre_hint:"Entre ton ID de ticket pour voir son statut et la réponse de l'équipe.",
+    suivre_placeholder:"Ex: TKT-123456",suivre_btn:"Rechercher",suivre_notfound:"❌ Ticket introuvable.",
+    admin_name_label:"Ton pseudo (staff)",admin_name_ph:"ex: LoupYTB_",
+    admin_pwd_label:"Mot de passe admin",admin_pwd_ph:"Mot de passe...",
+    admin_login_btn:"🔓 Connexion",admin_pwd_error:"Mot de passe incorrect ou pseudo manquant.",
+    admin_mode:"Mode admin activé —",admin_badge:"STAFF",admin_logout:"Déconnexion",
+    admin_assignee:"👤 Assigné à",admin_status:"🔄 Statut",admin_reply_label:"✏️ Réponse",
+    admin_reply_ph:"Écris ta réponse ici...",admin_save:"💾 Enregistrer + Notifier",admin_delete:"🗑 Supprimer",
+    status_open:"🔵 Ouvert",status_progress:"🟡 En cours",status_closed:"🟢 Fermé",
+    waiting_reply:"En attente de réponse de l'équipe...",reply_current:"💬 Réponse actuelle",
+    reply_team:"💬 Réponse de l'équipe",assigned_by:"Pris en charge par",
+    notif_created:"✅ Ticket créé ! Ton ID : {id} — note-le pour suivre ta demande dans l'onglet 🔍",
+    loading:"⏳ Chargement...",no_ticket:"Aucun ticket.",
+    discord_tag_ph:"ex: LoupYTB_",discord_id_ph:"ex: 123456789012345678",
+    subject_ph:"Résume ton problème",msg_ph:"Explique en détail...",assignee_ph:"Pseudo du staff qui prend en charge"
+  },
+  en:{
+    subtitle:"Ticket system — send your request, we reply on Discord",
+    tab_tickets:"Tickets",tab_new:"+ New ticket",tab_suivre:"🔍 Track my ticket",tab_admin:"🔒 Admin",
+    filter_all:"All",filter_open:"Open",filter_progress:"In progress",filter_closed:"Closed",
+    detail_empty:"Select a ticket",
+    form_discord_tag:"Discord tag (username)",form_discord_id:"Discord ID",
+    form_discord_hint:"⚠️ Required to receive a real Discord notification",
+    form_cat:"Category",form_subject:"Subject",form_prio:"Priority",form_msg:"Description",
+    form_send:"📨 Send ticket",form_error:"Please fill in all fields.",
+    form_prio_low:"Low",form_prio_med:"Medium",form_prio_high:"High",
+    form_cat1:"General support",form_cat2:"Bug / Issue",form_cat3:"Partnership request",form_cat4:"Sanction / Appeal",form_cat5:"Other",
+    guide_title:"📋 How to find your Discord ID?",
+    guide_step1:"1. In Discord → <strong>Settings → Advanced → Enable Developer Mode</strong>",
+    guide_step2:"2. Right-click your avatar → <strong>Copy User ID</strong>",
+    guide_step3:"The ID looks like: <strong>123456789012345678</strong>",
+    suivre_hint:"Enter your ticket ID to see its status and the team's reply.",
+    suivre_placeholder:"Ex: TKT-123456",suivre_btn:"Search",suivre_notfound:"❌ Ticket not found.",
+    admin_name_label:"Your username (staff)",admin_name_ph:"ex: LoupYTB_",
+    admin_pwd_label:"Admin password",admin_pwd_ph:"Password...",
+    admin_login_btn:"🔓 Login",admin_pwd_error:"Wrong password or missing username.",
+    admin_mode:"Admin mode active —",admin_badge:"STAFF",admin_logout:"Logout",
+    admin_assignee:"👤 Assigned to",admin_status:"🔄 Status",admin_reply_label:"✏️ Reply",
+    admin_reply_ph:"Write your reply here...",admin_save:"💾 Save + Notify",admin_delete:"🗑 Delete",
+    status_open:"🔵 Open",status_progress:"🟡 In progress",status_closed:"🟢 Closed",
+    waiting_reply:"Waiting for the team's reply...",reply_current:"💬 Current reply",
+    reply_team:"💬 Team reply",assigned_by:"Handled by",
+    notif_created:"✅ Ticket created! Your ID: {id} — save it to track your request in the 🔍 tab",
+    loading:"⏳ Loading...",no_ticket:"No tickets.",
+    discord_tag_ph:"ex: LoupYTB_",discord_id_ph:"ex: 123456789012345678",
+    subject_ph:"Summarize your issue",msg_ph:"Explain in detail...",assignee_ph:"Staff username handling this ticket"
+  }
+};
+
+function t(key){return translations[lang][key]||key;}
+
+function toggleLang(){
+  lang=lang==="fr"?"en":"fr";
+  document.getElementById("lang-toggle").textContent=lang==="fr"?"🇬🇧 English":"🇫🇷 Français";
+  applyLang();
+  renderList();
+  if(isAdmin)renderAdminList();
+  if(selectedId)selectTicket(selectedId);
+  if(adminSelectedId)selectAdminTicket(adminSelectedId);
+}
+
+function applyLang(){
+  const T=translations[lang];
+  document.getElementById("txt-subtitle").textContent=T.subtitle;
+  const tabs=document.querySelectorAll(".tab");
+  if(tabs[0])tabs[0].innerHTML=T.tab_tickets+'<span class="badge" id="open-count">'+document.getElementById("open-count").textContent+'</span>';
+  if(tabs[1])tabs[1].textContent=T.tab_new;
+  if(tabs[2])tabs[2].textContent=T.tab_suivre;
+  if(tabs[3])tabs[3].textContent=T.tab_admin;
+  document.querySelectorAll("#tab-tickets .filter-btn").forEach((b,i)=>{
+    b.textContent=[T.filter_all,T.filter_open,T.filter_progress,T.filter_closed][i]||b.textContent;
+  });
+  const el=document.getElementById("ticket-detail");
+  if(el.querySelector(".empty"))el.innerHTML='<div class="empty">'+T.detail_empty+'</div>';
+  // formulaire
+  const fl=document.querySelectorAll("#tab-new label");
+  if(fl[0])fl[0].textContent=T.form_discord_tag;
+  if(fl[1])fl[1].textContent=T.form_discord_id;
+  if(fl[2])fl[2].textContent=T.form_cat;
+  if(fl[3])fl[3].textContent=T.form_subject;
+  if(fl[4])fl[4].textContent=T.form_prio;
+  if(fl[5])fl[5].textContent=T.form_msg;
+  const btn=document.querySelector("#tab-new .btn.primary");
+  if(btn)btn.textContent=T.form_send;
+  const hint=document.querySelector("#tab-new .hint");
+  if(hint)hint.textContent=T.form_discord_hint;
+  document.getElementById("t-discord").placeholder=T.discord_tag_ph;
+  document.getElementById("t-discordid").placeholder=T.discord_id_ph;
+  document.getElementById("t-subject").placeholder=T.subject_ph;
+  document.getElementById("t-msg").placeholder=T.msg_ph;
+  // guide
+  const gb=document.querySelector(".guide-box");
+  if(gb)gb.innerHTML='<strong>'+T.guide_title+'</strong><br>'+T.guide_step1+'<br>'+T.guide_step2+'<br>'+T.guide_step3;
+  // suivre
+  const sh=document.querySelector("#tab-suivre p");
+  if(sh)sh.textContent=T.suivre_hint;
+  document.getElementById("search-id").placeholder=T.suivre_placeholder;
+  const sb=document.querySelector("#tab-suivre .btn.primary");
+  if(sb)sb.textContent=T.suivre_btn;
+  // admin login
+  const al=document.querySelectorAll("#admin-login label");
+  if(al[0])al[0].textContent=T.admin_name_label;
+  if(al[1])al[1].textContent=T.admin_pwd_label;
+  document.getElementById("admin-name").placeholder=T.admin_name_ph;
+  document.getElementById("admin-pwd").placeholder=T.admin_pwd_ph;
+  const alb=document.querySelector("#admin-login .btn.primary");
+  if(alb)alb.textContent=T.admin_login_btn;
+}
+
 loadTickets();
 </script>
 </body>
