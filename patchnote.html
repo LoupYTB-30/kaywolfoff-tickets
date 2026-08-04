@@ -190,7 +190,7 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 const ADMIN_PASSWORD = "kaywolfoff2026";
 const WH_PATCHNOTE = "https://discord.com/api/webhooks/1510013347381121164/CZmnhDMoZtOgDvZ8_d_LC-mSJ7XOzL8ayH2xHepak2JNvXNR06Pk7pQbtvfgjpbvDxhA";
 
-const APPS_SCRIPT_PATCHNOTE = "https://script.google.com/macros/s/AKfycbxaFtzNKvv9GJELKco5LYerIy1PW5XIpKcX5VWfs2uO-_670UHsITLjb92Q4spTRrKnmA/exec";
+const APPS_SCRIPT_PATCHNOTE = "https://script.google.com/macros/s/AKfycbwvQodrkpJiL_6E7NgEvzDitkfT5jFCbq4HTl8jvcFzRY2fLuQmUl88n9shlo4yanlY0g/exec";
 
 function buildDiscordPayload(version, cat, desc, done, todo, modify, remove, isEdit){
   const catLabel = cat==="site" ? "🌐 Site Web" : "💬 Serveur Discord";
@@ -231,12 +231,9 @@ async function publishToDiscord(){
   btn.disabled = true;
 
   try {
-    // 1. Cherche si un message Discord existe déjà pour ce patch note
-    const checkRes = await fetch(APPS_SCRIPT_PATCHNOTE, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({action:"getMessageId", patchId})
-    });
+    // 1. Cherche si un message Discord existe déjà (via GET pour éviter CORS)
+    const checkUrl = APPS_SCRIPT_PATCHNOTE + "?action=getMessageId&patchId=" + encodeURIComponent(patchId);
+    const checkRes = await fetch(checkUrl);
     const checkData = await checkRes.json();
     const existingMsgId = checkData.messageId;
 
@@ -244,7 +241,7 @@ async function publishToDiscord(){
 
     let r;
     if(existingMsgId){
-      // Modifie le message existant via PATCH
+      // Modifie le message existant via PATCH webhook
       r = await fetch(`${WH_PATCHNOTE}/messages/${existingMsgId}`, {
         method:"PATCH",
         headers:{"Content-Type":"application/json"},
@@ -252,7 +249,7 @@ async function publishToDiscord(){
       });
     } else {
       // Envoie un nouveau message et récupère l'ID
-      r = await fetch(WH_PATCHNOTE+"?wait=true", {
+      r = await fetch(WH_PATCHNOTE + "?wait=true", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify(payload)
@@ -260,16 +257,16 @@ async function publishToDiscord(){
       if(r.ok){
         const msgData = await r.json();
         const newMsgId = msgData.id;
-        // Sauvegarde l'ID dans Google Sheets
-        await fetch(APPS_SCRIPT_PATCHNOTE, {
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body: JSON.stringify({action:"saveMessageId", patchId, messageId: newMsgId})
-        });
+        // Sauvegarde l'ID dans Google Sheets via GET
+        const saveUrl = APPS_SCRIPT_PATCHNOTE
+          + "?action=saveMessageId"
+          + "&patchId=" + encodeURIComponent(patchId)
+          + "&messageId=" + encodeURIComponent(newMsgId);
+        await fetch(saveUrl);
       }
     }
 
-    if(r.ok){
+    if(r && r.ok){
       btn.textContent = existingMsgId ? "✅ Message modifié !" : "✅ Publié sur Discord !";
       btn.style.background = "#238636";
       setTimeout(()=>{
@@ -282,6 +279,7 @@ async function publishToDiscord(){
       btn.disabled = false;
     }
   } catch(e) {
+    console.error(e);
     btn.textContent = "❌ Erreur — réessaie";
     btn.disabled = false;
   }
