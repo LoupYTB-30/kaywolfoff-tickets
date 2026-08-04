@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recrutement — KayWolfOff</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh;padding:20px}
+h1{text-align:center;font-size:24px;margin-bottom:6px;color:#fff}
+.subtitle{text-align:center;font-size:14px;color:#8b949e;margin-bottom:24px}
+.lang-btn{position:fixed;top:16px;right:16px;padding:6px 12px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #30363d;background:#161b22;color:#e6edf3;z-index:999}
+.lang-btn:hover{background:#21262d}
+.tabs{display:flex;gap:4px;border-bottom:1px solid #30363d;margin-bottom:20px;flex-wrap:wrap}
+.tab{padding:8px 16px;font-size:14px;cursor:pointer;border:none;background:none;color:#8b949e;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.active{color:#58a6ff;border-bottom-color:#58a6ff}
+.tab:hover:not(.active){color:#e6edf3}
+input,select,textarea{font-family:Arial,sans-serif;background:#161b22;border:1px solid #30363d;border-radius:6px;color:#e6edf3;padding:8px 12px;width:100%;font-size:14px;margin-bottom:10px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#58a6ff}
+textarea{resize:vertical;min-height:70px}
+label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
+.btn{padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #30363d;background:#21262d;color:#e6edf3;transition:background .15s}
+.btn:hover{background:#30363d}
+.btn.primary{background:#238636;border-color:#2ea043;color:#fff}
+.btn.primary:hover{background:#2ea043}
+.btn.sm{padding:4px 10px;font-size:12px}
+.btn.danger{border-color:#da3633;color:#f85149;background:none}
+.btn.danger:hover{background:#3d1c1c}
+.btn.discord-btn{background:#5865f2;border-color:#4752c4;color:#fff;font-weight:600}
+.btn.discord-btn:hover{background:#4752c4}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.error{color:#f85149;font-size:13px;display:none;margin-top:4px}
+.notif{border-radius:6px;padding:10px 14px;font-size:13px;display:none;margin-bottom:12px}
+.notif.show{display:block}
+.notif.success{background:#0f2d1a;border:1px solid #238636;color:#3fb950}
+.form-section{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:18px;margin-bottom:16px}
+.form-section h3{font-size:14px;font-weight:600;margin-bottom:14px;color:#e6edf3}
+.admin-bar{background:#161b22;border:1px solid #30363d;border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:13px;flex-wrap:wrap}
+.admin-badge{background:#5a3e1b;color:#d29922;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600}
+
+/* CARTE RECRUTEMENT */
+.recru-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.recru-card{background:#161b22;border:1px solid #30363d;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:14px}
+.recru-card.open{border-color:#238636}
+.recru-card.closed{border-color:#da3633;opacity:.85}
+.recru-header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.recru-title{font-size:20px;font-weight:700;color:#fff}
+.recru-icon{font-size:32px}
+.status-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:.04em}
+.status-badge.open{background:#0f2d1a;border:1px solid #238636;color:#3fb950}
+.status-badge.closed{background:#2d1b1b;border:1px solid #da3633;color:#f85149}
+.status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.status-dot.open{background:#3fb950;box-shadow:0 0 6px #3fb950}
+.status-dot.closed{background:#f85149}
+.recru-desc{font-size:14px;color:#8b949e;line-height:1.6}
+.recru-info{display:flex;flex-direction:column;gap:6px}
+.recru-info-row{display:flex;align-items:center;gap:8px;font-size:13px;color:#c9d1d9}
+.recru-info-row span:first-child{font-size:16px}
+.recru-apply-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;border:none;text-decoration:none;transition:background .15s}
+.recru-apply-btn.open{background:#238636;color:#fff}
+.recru-apply-btn.open:hover{background:#2ea043}
+.recru-apply-btn.closed{background:#21262d;color:#8b949e;cursor:not-allowed;border:1px solid #30363d}
+
+/* ADMIN RECRUTEMENT */
+.recru-admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.recru-admin-card{background:#0d1117;border:1px solid #30363d;border-radius:10px;padding:16px}
+.recru-admin-card h4{font-size:14px;font-weight:600;margin-bottom:12px;color:#e6edf3}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.toggle-label{font-size:13px;color:#8b949e}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#30363d;border-radius:24px;cursor:pointer;transition:.2s}
+.toggle-slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-slider{background:#238636}
+.toggle input:checked+.toggle-slider:before{transform:translateX(20px)}
+
+@media(max-width:600px){
+  .recru-grid{grid-template-columns:1fr}
+  .recru-admin-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<button class="lang-btn" id="lang-toggle" onclick="toggleLang()">🇬🇧 English</button>
+
+<h1>🎯 KayWolfOff — <span id="txt-title-suffix">Recrutement</span></h1>
+<p class="subtitle" id="txt-subtitle">Rejoins l'équipe KayWolfOff et participe à l'aventure !</p>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('recru')" id="tab-recru">🎯 <span id="tab-recru-txt">Recrutements</span></button>
+  <button class="tab" onclick="switchTab('admin')" id="tab-admin-btn">🔒 Admin</button>
+</div>
+
+<!-- ONGLET RECRUTEMENTS -->
+<div id="tab-recru">
+  <div class="recru-grid" id="recru-grid"></div>
+</div>
+
+<!-- ONGLET ADMIN -->
+<div id="tab-admin" style="display:none">
+  <div id="admin-login" style="max-width:320px">
+    <label id="lbl-admin-name">Ton pseudo (staff)</label>
+    <input type="text" id="admin-name" placeholder="ex: LoupYTB_">
+    <label id="lbl-admin-pwd">Mot de passe admin</label>
+    <input type="password" id="admin-pwd" placeholder="Mot de passe...">
+    <button class="btn primary" onclick="checkAdmin()" id="btn-admin-login">🔓 Connexion</button>
+    <div class="error" id="pwd-error">Mot de passe incorrect ou pseudo manquant.</div>
+  </div>
+
+  <div id="admin-panel" style="display:none">
+    <div class="admin-bar">
+      <span>🛡️</span>
+      <span id="admin-mode-txt">Mode admin activé —</span>
+      <span id="admin-name-display" style="color:#a78bfa;font-weight:600"></span>
+      <span class="admin-badge">STAFF</span>
+      <button class="btn sm danger" style="margin-left:auto" onclick="logoutAdmin()" id="btn-logout">Déconnexion</button>
+    </div>
+
+    <div class="notif success" id="notif-saved"></div>
+
+    <div class="recru-admin-grid">
+      <!-- MODÉRATEUR -->
+      <div class="recru-admin-card">
+        <h4>🛡️ <span id="admin-title-modo">Modérateur</span></h4>
+        <div class="toggle-row">
+          <span class="toggle-label" id="lbl-status-modo">Recrutement ouvert</span>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-modo" onchange="saveConfig()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <label id="lbl-msg-modo">Message affiché</label>
+        <textarea id="msg-modo" placeholder="Ex: Nous recherchons des modérateurs actifs..." onchange="saveConfig()"></textarea>
+        <label id="lbl-places-modo">Places disponibles (optionnel)</label>
+        <input type="number" id="places-modo" placeholder="ex: 3" min="0" onchange="saveConfig()">
+        <label id="lbl-date-modo">Date de clôture estimée (optionnel)</label>
+        <input type="text" id="date-modo" placeholder="ex: 15 août 2026" onchange="saveConfig()">
+        <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
+          <button class="btn discord-btn" onclick="publishDiscord('modo')" id="btn-discord-modo">🚀 Annoncer sur Discord</button>
+        </div>
+      </div>
+
+      <!-- ANIMATEUR -->
+      <div class="recru-admin-card">
+        <h4>🎬 <span id="admin-title-anim">Animateur</span></h4>
+        <div class="toggle-row">
+          <span class="toggle-label" id="lbl-status-anim">Recrutement ouvert</span>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-anim" onchange="saveConfig()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <label id="lbl-msg-anim">Message affiché</label>
+        <textarea id="msg-anim" placeholder="Ex: Nous recherchons des animateurs créatifs..." onchange="saveConfig()"></textarea>
+        <label id="lbl-places-anim">Places disponibles (optionnel)</label>
+        <input type="number" id="places-anim" placeholder="ex: 2" min="0" onchange="saveConfig()">
+        <label id="lbl-date-anim">Date de clôture estimée (optionnel)</label>
+        <input type="text" id="date-anim" placeholder="ex: 20 août 2026" onchange="saveConfig()">
+        <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
+          <button class="btn discord-btn" onclick="publishDiscord('anim')" id="btn-discord-anim">🚀 Annoncer sur Discord</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ADMIN_PASSWORD = "kaywolfoff2026";
+const APPS_SCRIPT_URL = "METS_TON_URL_ICI";
+const WH_RECRU = "METS_TON_WEBHOOK_ICI";
+
+const FORMS = {
+  modo: "https://docs.google.com/forms/d/e/1FAIpQLSc2gcYt02OkMBc2AETnj-5BJe9HEilCOgljyFA69l07jEmWug/viewform",
+  anim: "https://docs.google.com/forms/d/e/1FAIpQLSdPiFAR_ywPvd8Eac2pMkwrEmBWsDur1Fc3RLmv6KzAsCNL8g/viewform"
+};
+
+let lang = "fr";
+let adminPseudo = "";
+let config = {
+  modo: { open: false, msg: "", places: "", date: "" },
+  anim: { open: false, msg: "", places: "", date: "" }
+};
+
+// ===== APPS SCRIPT =====
+async function loadConfig() {
+  try {
+    const url = APPS_SCRIPT_URL + "?action=getConfig";
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.ok && data.config) {
+      config = data.config;
+    }
+  } catch(e) {
+    console.warn("Impossible de charger la config depuis Sheets, utilisation locale.");
+  }
+  applyConfigToForm();
+  renderCards();
+}
+
+async function saveConfig() {
+  // Lit les valeurs du formulaire admin
+  config.modo.open = document.getElementById("toggle-modo").checked;
+  config.modo.msg = document.getElementById("msg-modo").value.trim();
+  config.modo.places = document.getElementById("places-modo").value.trim();
+  config.modo.date = document.getElementById("date-modo").value.trim();
+  config.anim.open = document.getElementById("toggle-anim").checked;
+  config.anim.msg = document.getElementById("msg-anim").value.trim();
+  config.anim.places = document.getElementById("places-anim").value.trim();
+  config.anim.date = document.getElementById("date-anim").value.trim();
+
+  renderCards();
+
+  try {
+    const url = APPS_SCRIPT_URL + "?action=saveConfig&config=" + encodeURIComponent(JSON.stringify(config));
+    await fetch(url);
+  } catch(e) { console.warn("Erreur sauvegarde config"); }
+
+  const T = translations[lang];
+  const n = document.getElementById("notif-saved");
+  n.textContent = T.notif_saved;
+  n.classList.add("show");
+  setTimeout(() => n.classList.remove("show"), 2500);
+}
+
+function applyConfigToForm() {
+  document.getElementById("toggle-modo").checked = config.modo.open;
+  document.getElementById("msg-modo").value = config.modo.msg || "";
+  document.getElementById("places-modo").value = config.modo.places || "";
+  document.getElementById("date-modo").value = config.modo.date || "";
+  document.getElementById("toggle-anim").checked = config.anim.open;
+  document.getElementById("msg-anim").value = config.anim.msg || "";
+  document.getElementById("places-anim").value = config.anim.places || "";
+  document.getElementById("date-anim").value = config.anim.date || "";
+}
+
+// ===== RENDU CARTES =====
+function renderCards() {
+  const T = translations[lang];
+  const grid = document.getElementById("recru-grid");
+  const roles = [
+    { key: "modo", icon: "🛡️", label: T.role_modo },
+    { key: "anim", icon: "🎬", label: T.role_anim }
+  ];
+
+  grid.innerHTML = roles.map(r => {
+    const c = config[r.key];
+    const isOpen = c.open;
+    const statusClass = isOpen ? "open" : "closed";
+    const statusLabel = isOpen ? T.status_open : T.status_closed;
+    const btnLabel = isOpen ? T.btn_apply : T.btn_closed;
+
+    const infoRows = [];
+    if (c.places) infoRows.push(`<div class="recru-info-row"><span>👥</span><span>${T.info_places.replace("{n}", c.places)}</span></div>`);
+    if (c.date) infoRows.push(`<div class="recru-info-row"><span>📅</span><span>${T.info_date.replace("{d}", c.date)}</span></div>`);
+
+    return `
+    <div class="recru-card ${statusClass}">
+      <div class="recru-header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="recru-icon">${r.icon}</span>
+          <div>
+            <div class="recru-title">${r.label}</div>
+            <div style="margin-top:6px">
+              <span class="status-badge ${statusClass}">
+                <span class="status-dot ${statusClass}"></span>
+                ${statusLabel}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      ${c.msg ? `<div class="recru-desc">${c.msg}</div>` : ""}
+      ${infoRows.length ? `<div class="recru-info">${infoRows.join("")}</div>` : ""}
+      ${isOpen
+        ? `<a href="${FORMS[r.key]}" target="_blank" class="recru-apply-btn open">📋 ${btnLabel}</a>`
+        : `<span class="recru-apply-btn closed">🔒 ${btnLabel}</span>`
+      }
+    </div>`;
+  }).join("");
+}
+
+// ===== DISCORD =====
+async function publishDiscord(role) {
+  const T = translations[lang];
+  const c = config[role];
+  const roleLabel = role === "modo" ? T.role_modo : T.role_anim;
+  const roleIcon = role === "modo" ? "🛡️" : "🎬";
+  const isOpen = c.open;
+  const color = isOpen ? 2278750 : 14495300; // vert ou rouge
+
+  let desc = c.msg || "";
+  if (c.places) desc += `\n\n👥 **${T.info_places.replace("{n}", c.places)}**`;
+  if (c.date) desc += `\n📅 **${T.info_date.replace("{d}", c.date)}**`;
+  if (isOpen) desc += `\n\n📋 **[${T.btn_apply}](${FORMS[role]})**`;
+
+  const payload = {
+    content: isOpen
+      ? `<@&1519783787892834456> — ${roleIcon} Recrutement ouvert !`
+      : `📢 Recrutement ${roleLabel} fermé.`,
+    embeds: [{
+      title: `${roleIcon} Recrutement ${roleLabel} — ${isOpen ? "🟢 OUVERT" : "🔴 FERMÉ"}`,
+      description: desc || (isOpen ? "Les recrutements sont ouverts !" : "Les recrutements sont fermés."),
+      color,
+      footer: { text: `KayWolfOff Recrutement • Par ${adminPseudo}` },
+      timestamp: new Date().toISOString()
+    }]
+  };
+
+  const btn = document.getElementById("btn-discord-" + role);
+  btn.textContent = "⏳ Envoi...";
+  btn.disabled = true;
+
+  try {
+    const r = await fetch(WH_RECRU + "?wait=true", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (r.ok) {
+      btn.textContent = "✅ Annoncé !";
+      btn.style.background = "#238636";
+      setTimeout(() => {
+        btn.textContent = "🚀 Annoncer sur Discord";
+        btn.style.background = "";
+        btn.disabled = false;
+      }, 3000);
+    } else {
+      btn.textContent = "❌ Erreur";
+      btn.disabled = false;
+    }
+  } catch(e) {
+    btn.textContent = "❌ Erreur";
+    btn.disabled = false;
+  }
+}
+
+// ===== ADMIN =====
+function switchTab(t) {
+  document.getElementById("tab-recru").style.display = t === "recru" ? "block" : "none";
+  document.getElementById("tab-admin").style.display = t === "admin" ? "block" : "none";
+  document.querySelectorAll(".tab").forEach((el, i) => el.classList.toggle("active", ["recru","admin"][i] === t));
+}
+
+function checkAdmin() {
+  const pwd = document.getElementById("admin-pwd").value;
+  const name = document.getElementById("admin-name").value.trim();
+  if (pwd === ADMIN_PASSWORD && name) {
+    adminPseudo = name;
+    document.getElementById("admin-login").style.display = "none";
+    document.getElementById("admin-panel").style.display = "block";
+    document.getElementById("pwd-error").style.display = "none";
+    document.getElementById("admin-name-display").textContent = name;
+    applyConfigToForm();
+  } else {
+    document.getElementById("pwd-error").style.display = "block";
+  }
+}
+
+function logoutAdmin() {
+  adminPseudo = "";
+  document.getElementById("admin-login").style.display = "block";
+  document.getElementById("admin-panel").style.display = "none";
+  document.getElementById("admin-pwd").value = "";
+  document.getElementById("admin-name").value = "";
+}
+
+// ===== TRADUCTIONS =====
+const translations = {
+  fr: {
+    title_suffix: "Recrutement",
+    subtitle: "Rejoins l'équipe KayWolfOff et participe à l'aventure !",
+    tab_recru: "Recrutements",
+    role_modo: "Modérateur",
+    role_anim: "Animateur",
+    status_open: "Recrutement ouvert",
+    status_closed: "Recrutement fermé",
+    btn_apply: "Postuler maintenant",
+    btn_closed: "Recrutement fermé",
+    info_places: "{n} place(s) disponible(s)",
+    info_date: "Clôture estimée : {d}",
+    lbl_status: "Recrutement ouvert",
+    lbl_msg: "Message affiché",
+    lbl_places: "Places disponibles (optionnel)",
+    lbl_date: "Date de clôture estimée (optionnel)",
+    admin_mode: "Mode admin activé —",
+    admin_logout: "Déconnexion",
+    lbl_admin_name: "Ton pseudo (staff)",
+    lbl_admin_pwd: "Mot de passe admin",
+    btn_login: "🔓 Connexion",
+    pwd_error: "Mot de passe incorrect ou pseudo manquant.",
+    notif_saved: "✅ Configuration sauvegardée !"
+  },
+  en: {
+    title_suffix: "Recruitment",
+    subtitle: "Join the KayWolfOff team and be part of the adventure!",
+    tab_recru: "Recruitment",
+    role_modo: "Moderator",
+    role_anim: "Animator",
+    status_open: "Recruitment open",
+    status_closed: "Recruitment closed",
+    btn_apply: "Apply now",
+    btn_closed: "Recruitment closed",
+    info_places: "{n} spot(s) available",
+    info_date: "Closing date: {d}",
+    lbl_status: "Recruitment open",
+    lbl_msg: "Displayed message",
+    lbl_places: "Available spots (optional)",
+    lbl_date: "Estimated closing date (optional)",
+    admin_mode: "Admin mode active —",
+    admin_logout: "Logout",
+    lbl_admin_name: "Your username (staff)",
+    lbl_admin_pwd: "Admin password",
+    btn_login: "🔓 Login",
+    pwd_error: "Wrong password or missing username.",
+    notif_saved: "✅ Configuration saved!"
+  }
+};
+
+function applyLang() {
+  const T = translations[lang];
+  document.getElementById("txt-title-suffix").textContent = T.title_suffix;
+  document.getElementById("txt-subtitle").textContent = T.subtitle;
+  document.getElementById("tab-recru-txt").textContent = T.tab_recru;
+  document.getElementById("admin-mode-txt").textContent = T.admin_mode;
+  document.getElementById("btn-logout").textContent = T.admin_logout;
+  document.getElementById("lbl-admin-name").textContent = T.lbl_admin_name;
+  document.getElementById("lbl-admin-pwd").textContent = T.lbl_admin_pwd;
+  document.getElementById("btn-admin-login").textContent = T.btn_login;
+  document.getElementById("pwd-error").textContent = T.pwd_error;
+  ["modo","anim"].forEach(r => {
+    document.getElementById("lbl-status-"+r).textContent = T.lbl_status;
+    document.getElementById("lbl-msg-"+r).textContent = T.lbl_msg;
+    document.getElementById("lbl-places-"+r).textContent = T.lbl_places;
+    document.getElementById("lbl-date-"+r).textContent = T.lbl_date;
+  });
+  document.getElementById("admin-title-modo").textContent = T.role_modo;
+  document.getElementById("admin-title-anim").textContent = T.role_anim;
+  renderCards();
+}
+
+function toggleLang() {
+  lang = lang === "fr" ? "en" : "fr";
+  document.getElementById("lang-toggle").textContent = lang === "fr" ? "🇬🇧 English" : "🇫🇷 Français";
+  applyLang();
+}
+
+document.getElementById("admin-pwd").addEventListener("keydown", e => { if(e.key === "Enter") checkAdmin(); });
+loadConfig();
+</script>
+</body>
+</html>
