@@ -190,12 +190,35 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 const ADMIN_PASSWORD = "kaywolfoff2026";
 const WH_PATCHNOTE = "https://discord.com/api/webhooks/1510013347381121164/CZmnhDMoZtOgDvZ8_d_LC-mSJ7XOzL8ayH2xHepak2JNvXNR06Pk7pQbtvfgjpbvDxhA";
 
+const APPS_SCRIPT_PATCHNOTE = "https://script.google.com/macros/s/AKfycbxaFtzNKvv9GJELKco5LYerIy1PW5XIpKcX5VWfs2uO-_670UHsITLjb92Q4spTRrKnmA/exec";
+
+function buildDiscordPayload(version, cat, desc, done, todo, modify, remove, isEdit){
+  const catLabel = cat==="site" ? "🌐 Site Web" : "💬 Serveur Discord";
+  const fields = [];
+  if(done) fields.push({name:"✅ Ce qui a été fait",value:done.split("\n").filter(l=>l.trim()).map(l=>"• "+l.trim()).join("\n"),inline:false});
+  if(todo) fields.push({name:"📋 À faire",value:todo.split("\n").filter(l=>l.trim()).map(l=>"• "+l.trim()).join("\n"),inline:false});
+  if(modify) fields.push({name:"✏️ À modifier",value:modify.split("\n").filter(l=>l.trim()).map(l=>"• "+l.trim()).join("\n"),inline:false});
+  if(remove) fields.push({name:"🗑️ À supprimer",value:remove.split("\n").filter(l=>l.trim()).map(l=>"• "+l.trim()).join("\n"),inline:false});
+  return {
+    content: isEdit ? "📝 Patch note mis à jour !" : "<@&1519783787892834456> — 📋 Nouveau patch note disponible !",
+    embeds:[{
+      title: "📋 Patch Note — " + version,
+      description: (desc?desc+"\n\n":"")+("**Catégorie :** "+catLabel),
+      color: cat==="site" ? 3447003 : 5793266,
+      fields,
+      footer:{text:"KayWolfOff Patch Notes • "+(isEdit?"Modifié":"Publié")+" par "+adminPseudo+" • "+formatNow()},
+      timestamp: new Date().toISOString()
+    }]
+  };
+}
+
 async function publishToDiscord(){
   const version = document.getElementById("f-version").value.trim();
   const err = document.getElementById("form-error");
   if(!version){err.style.display="block";return;}
   err.style.display="none";
 
+  const patchId = editingId || ("pn-"+Date.now());
   const cat = document.getElementById("f-cat").value;
   const desc = document.getElementById("f-desc").value.trim();
   const done = document.getElementById("f-done").value.trim();
@@ -203,34 +226,51 @@ async function publishToDiscord(){
   const modify = document.getElementById("f-modify").value.trim();
   const remove = document.getElementById("f-remove").value.trim();
 
-  const catLabel = cat==="site" ? "🌐 Site Web" : "💬 Serveur Discord";
-  const fields = [];
-
-  if(done) fields.push({name:"✅ Ce qui a été fait",value:done.split("\n").filter(l=>l.trim()).map(l=>"• "+l.trim()).join("\n"),inline:false});
-  if(todo) fields.push({name:"📋 À faire",value:todo.split("\n").filter(l=>l.trim()).map(l=>"• "+l.trim()).join("\n"),inline:false});
-  if(modify) fields.push({name:"✏️ À modifier",value:modify.split("\n").filter(l=>l.trim()).map(l=>"• "+l.trim()).join("\n"),inline:false});
-  if(remove) fields.push({name:"🗑️ À supprimer",value:remove.split("\n").filter(l=>l.trim()).map(l=>"• "+l.trim()).join("\n"),inline:false});
-
-  const payload = {
-    content: "<@&1519783787892834456> — 📋 Nouveau patch note disponible !",
-    embeds:[{
-      title: "📋 Patch Note — " + version,
-      description: (desc?desc+"\n\n":"")+("**Catégorie :** "+catLabel),
-      color: cat==="site" ? 3447003 : 5793266,
-      fields,
-      footer:{text:"KayWolfOff Patch Notes • Publié par "+adminPseudo+" • "+formatNow()},
-      timestamp: new Date().toISOString()
-    }]
-  };
-
   const btn = document.getElementById("btn-discord");
   btn.textContent = "⏳ Envoi...";
   btn.disabled = true;
 
-  try{
-    const r = await fetch(WH_PATCHNOTE,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  try {
+    // 1. Cherche si un message Discord existe déjà pour ce patch note
+    const checkRes = await fetch(APPS_SCRIPT_PATCHNOTE, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({action:"getMessageId", patchId})
+    });
+    const checkData = await checkRes.json();
+    const existingMsgId = checkData.messageId;
+
+    const payload = buildDiscordPayload(version, cat, desc, done, todo, modify, remove, !!existingMsgId);
+
+    let r;
+    if(existingMsgId){
+      // Modifie le message existant via PATCH
+      r = await fetch(`${WH_PATCHNOTE}/messages/${existingMsgId}`, {
+        method:"PATCH",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({embeds: payload.embeds})
+      });
+    } else {
+      // Envoie un nouveau message et récupère l'ID
+      r = await fetch(WH_PATCHNOTE+"?wait=true", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify(payload)
+      });
+      if(r.ok){
+        const msgData = await r.json();
+        const newMsgId = msgData.id;
+        // Sauvegarde l'ID dans Google Sheets
+        await fetch(APPS_SCRIPT_PATCHNOTE, {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({action:"saveMessageId", patchId, messageId: newMsgId})
+        });
+      }
+    }
+
     if(r.ok){
-      btn.textContent = "✅ Publié sur Discord !";
+      btn.textContent = existingMsgId ? "✅ Message modifié !" : "✅ Publié sur Discord !";
       btn.style.background = "#238636";
       setTimeout(()=>{
         btn.textContent = "🚀 Publier sur Discord";
@@ -241,7 +281,7 @@ async function publishToDiscord(){
       btn.textContent = "❌ Erreur — réessaie";
       btn.disabled = false;
     }
-  }catch(e){
+  } catch(e) {
     btn.textContent = "❌ Erreur — réessaie";
     btn.disabled = false;
   }
