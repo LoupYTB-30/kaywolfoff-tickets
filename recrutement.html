@@ -88,7 +88,7 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 <p class="subtitle" id="txt-subtitle">Rejoins l'équipe KayWolfOff et participe à l'aventure !</p>
 
 <div class="tabs">
-  <button class="tab active" onclick="switchTab('recru')" id="tab-recru">🎯 <span id="tab-recru-txt">Recrutements</span></button>
+  <button class="tab active" onclick="switchTab('recru')" id="tab-btn-recru">🎯 <span id="tab-recru-txt">Recrutements</span></button>
   <button class="tab" onclick="switchTab('admin')" id="tab-admin-btn">🔒 Admin</button>
 </div>
 
@@ -339,7 +339,8 @@ async function publishDiscord(role) {
 function switchTab(t) {
   document.getElementById("tab-recru").style.display = t === "recru" ? "block" : "none";
   document.getElementById("tab-admin").style.display = t === "admin" ? "block" : "none";
-  document.querySelectorAll(".tab").forEach((el, i) => el.classList.toggle("active", ["recru","admin"][i] === t));
+  document.getElementById("tab-btn-recru").classList.toggle("active", t === "recru");
+  document.getElementById("tab-admin-btn").classList.toggle("active", t === "admin");
 }
 
 function checkAdmin() {
