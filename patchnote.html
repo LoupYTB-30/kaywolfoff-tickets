@@ -212,7 +212,7 @@ async function publishToDiscord(){
   if(remove) fields.push({name:"🗑️ À supprimer",value:remove.split("\n").filter(l=>l.trim()).map(l=>"• "+l.trim()).join("\n"),inline:false});
 
   const payload = {
-    content: "@everyone — 📋 Nouveau patch note disponible !",
+    content: "<@&1519783787892834456> — 📋 Nouveau patch note disponible !",
     embeds:[{
       title: "📋 Patch Note — " + version,
       description: (desc?desc+"\n\n":"")+("**Catégorie :** "+catLabel),
