@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Support KayWolfOff — Tickets</title>
+<title>Support NexoStudio — Tickets</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh;padding:20px}
@@ -73,7 +73,7 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 </head>
 <body>
 <button class="lang-btn" id="lang-toggle" onclick="toggleLang()">🇬🇧 English</button>
-<h1>🎫 Support KayWolfOff</h1>
+<h1>🎫 Support NexoStudio</h1>
 <p class="subtitle" id="txt-subtitle">Système de tickets — envoie ta demande, on te répond sur Discord</p>
 <div class="tabs">
   <button class="tab active" onclick="switchTab('tickets')">Tickets <span class="badge" id="open-count">0</span></button>
@@ -330,9 +330,9 @@ async function notifyReply(t,reply){
         {name:"Sujet",value:t.subject},
         {name:"Réponse de l'équipe",value:reply},
         {name:"Statut",value:statusIcon(t.status)+" "+statusLabel(t.status),inline:true},
-        {name:"Pris en charge par",value:"👤 "+(t.assignee||"Équipe KayWolfOff"),inline:true}
+        {name:"Pris en charge par",value:"👤 "+(t.assignee||"Équipe NexoStudio"),inline:true}
       ],
-      footer:{text:"Support KayWolfOff — onglet 🔍 Suivre mon ticket avec l'ID "+t.id}
+      footer:{text:"Support NexoStudio — onglet 🔍 Suivre mon ticket avec l'ID "+t.id}
     }]
   };
   try{await fetch(WH_REPLY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});}
@@ -351,9 +351,9 @@ async function notifyStatus(t,oldStatus,newStatus){
         {name:"Sujet",value:t.subject},
         {name:"Ancien statut",value:statusIcon(oldStatus)+" "+statusLabel(oldStatus),inline:true},
         {name:"Nouveau statut",value:statusIcon(newStatus)+" "+statusLabel(newStatus),inline:true},
-        {name:"Pris en charge par",value:"👤 "+(t.assignee||"Équipe KayWolfOff"),inline:true}
+        {name:"Pris en charge par",value:"👤 "+(t.assignee||"Équipe NexoStudio"),inline:true}
       ],
-      footer:{text:"Support KayWolfOff — onglet 🔍 Suivre mon ticket avec l'ID "+t.id}
+      footer:{text:"Support NexoStudio — onglet 🔍 Suivre mon ticket avec l'ID "+t.id}
     }]
   };
   try{await fetch(WH_REPLY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});}
@@ -441,7 +441,7 @@ async function sendToDiscord(t){
       {name:"Priorité",value:t.prio,inline:true},
       {name:"Message",value:t.msg}
     ],
-    footer:{text:"Ticket Support KayWolfOff · "+t.date}
+    footer:{text:"Ticket Support NexoStudio · "+t.date}
   }]};
   try{await fetch(WH,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});}catch(e){}
 }
