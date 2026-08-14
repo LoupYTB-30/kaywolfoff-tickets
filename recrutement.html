@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Recrutement — NoxStudio</title>
+<title>Recrutement — KayWolfOff</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh;padding:20px}
@@ -84,8 +84,8 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 
 <button class="lang-btn" id="lang-toggle" onclick="toggleLang()">🇬🇧 English</button>
 
-<h1>🎯 NoxStudio — <span id="txt-title-suffix">Recrutement</span></h1>
-<p class="subtitle" id="txt-subtitle">Rejoins l'équipe NoxStudio et participe à l'aventure !</p>
+<h1>🎯 KayWolfOff — <span id="txt-title-suffix">Recrutement</span></h1>
+<p class="subtitle" id="txt-subtitle">Rejoins l'équipe KayWolfOff et participe à l'aventure !</p>
 
 <div class="tabs">
   <button class="tab active" onclick="switchTab('recru')" id="tab-btn-recru">🎯 <span id="tab-recru-txt">Recrutements</span></button>
@@ -162,12 +162,18 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
         </div>
       </div>
     </div>
+
+    <!-- BOUTON ANNONCER LES DEUX -->
+    <div class="form-section" style="text-align:center">
+      <h3 id="btn-both-title" style="margin-bottom:14px">📢 Annoncer les deux recrutements</h3>
+      <button class="btn discord-btn" onclick="publishDiscordBoth()" id="btn-discord-both" style="font-size:15px;padding:12px 28px">🚀 Annoncer Modérateur + Animateur</button>
+    </div>
   </div>
 </div>
 
 <script>
 const ADMIN_PASSWORD = "kaywolfoff2026";
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyFxuDKuIYQdYFBEBl5pxkkU4ll0xtGBilp1g3PhOto1WVB6BXDHj6rHyxmgerP2DQ86g/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuyrMc9mAnW-LujoUwveQE65b2eLkKSizKlII1uWmk5ywunpKFlZwbeGcHy3868dw5XA/exec";
 const WH_RECRU = "https://discord.com/api/webhooks/1509979248604090479/powZH11CteH4UVY2DlDSva_d-54IbjhqjXNBWl2ifvl-MfPFSNLsS0Xk3nJ9jbGrzRSB";
 
 const FORMS = {
@@ -329,6 +335,30 @@ async function publishDiscord(role) {
       btn.textContent = "❌ Erreur";
       btn.disabled = false;
     }
+  } catch(e) {
+    btn.textContent = "❌ Erreur";
+    btn.disabled = false;
+  }
+}
+
+async function publishDiscordBoth() {
+  const btn = document.getElementById("btn-discord-both");
+  btn.textContent = "⏳ Envoi...";
+  btn.disabled = true;
+
+  try {
+    await publishDiscord("modo");
+    // Petite pause pour éviter le rate limit Discord
+    await new Promise(r => setTimeout(r, 1000));
+    await publishDiscord("anim");
+
+    btn.textContent = "✅ Les deux annoncés !";
+    btn.style.background = "#238636";
+    setTimeout(() => {
+      btn.textContent = "🚀 Annoncer Modérateur + Animateur";
+      btn.style.background = "";
+      btn.disabled = false;
+    }, 3000);
   } catch(e) {
     btn.textContent = "❌ Erreur";
     btn.disabled = false;
