@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Recrutement — KayWolfOff</title>
+<title>Recrutement — NexoStudio</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh;padding:20px}
@@ -84,8 +84,8 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 
 <button class="lang-btn" id="lang-toggle" onclick="toggleLang()">🇬🇧 English</button>
 
-<h1>🎯 KayWolfOff — <span id="txt-title-suffix">Recrutement</span></h1>
-<p class="subtitle" id="txt-subtitle">Rejoins l'équipe KayWolfOff et participe à l'aventure !</p>
+<h1>🎯 NexoStudio — <span id="txt-title-suffix">Recrutement</span></h1>
+<p class="subtitle" id="txt-subtitle">Rejoins l'équipe NexoStudio et participe à l'aventure !</p>
 
 <div class="tabs">
   <button class="tab active" onclick="switchTab('recru')" id="tab-btn-recru">🎯 <span id="tab-recru-txt">Recrutements</span></button>
@@ -302,7 +302,7 @@ async function publishDiscord(role) {
       title: `${roleIcon} Recrutement ${roleLabel} — ${isOpen ? "🟢 OUVERT" : "🔴 FERMÉ"}`,
       description: desc || (isOpen ? "Les recrutements sont ouverts !" : "Les recrutements sont fermés."),
       color,
-      footer: { text: `KayWolfOff Recrutement • Par ${adminPseudo}` },
+      footer: { text: `NexoStudio Recrutement • Par ${adminPseudo}` },
       timestamp: new Date().toISOString()
     }]
   };
@@ -370,7 +370,7 @@ function logoutAdmin() {
 const translations = {
   fr: {
     title_suffix: "Recrutement",
-    subtitle: "Rejoins l'équipe KayWolfOff et participe à l'aventure !",
+    subtitle: "Rejoins l'équipe NexoStudio et participe à l'aventure !",
     tab_recru: "Recrutements",
     role_modo: "Modérateur",
     role_anim: "Animateur",
@@ -394,7 +394,7 @@ const translations = {
   },
   en: {
     title_suffix: "Recruitment",
-    subtitle: "Join the KayWolfOff team and be part of the adventure!",
+    subtitle: "Join the NexoStudio team and be part of the adventure!",
     tab_recru: "Recruitment",
     role_modo: "Moderator",
     role_anim: "Animator",
