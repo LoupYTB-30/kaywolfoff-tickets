@@ -175,7 +175,6 @@ label{font-size:13px;color:#8b949e;display:block;margin-bottom:4px}
 const ADMIN_PASSWORD = "kaywolfoff2026";
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuyrMc9mAnW-LujoUwveQE65b2eLkKSizKlII1uWmk5ywunpKFlZwbeGcHy3868dw5XA/exec";
 const WH_RECRU = "https://discord.com/api/webhooks/1509979248604090479/powZH11CteH4UVY2DlDSva_d-54IbjhqjXNBWl2ifvl-MfPFSNLsS0Xk3nJ9jbGrzRSB";
-
 const FORMS = {
   modo: "https://docs.google.com/forms/d/e/1FAIpQLSc2gcYt02OkMBc2AETnj-5BJe9HEilCOgljyFA69l07jEmWug/viewform",
   anim: "https://docs.google.com/forms/d/e/1FAIpQLSdPiFAR_ywPvd8Eac2pMkwrEmBWsDur1Fc3RLmv6KzAsCNL8g/viewform"
@@ -347,19 +346,52 @@ async function publishDiscordBoth() {
   btn.disabled = true;
 
   try {
-    await publishDiscord("modo");
-    // Petite pause pour éviter le rate limit Discord
-    await new Promise(r => setTimeout(r, 1000));
-    await publishDiscord("anim");
+    const embeds = [];
 
-    btn.textContent = "✅ Les deux annoncés !";
-    btn.style.background = "#238636";
-    setTimeout(() => {
-      btn.textContent = "🚀 Annoncer Modérateur + Animateur";
-      btn.style.background = "";
+    ["modo","anim"].forEach(role => {
+      const c2 = config[role];
+      const roleLabel = role === "modo" ? "Modérateur" : "Animateur";
+      const roleIcon = role === "modo" ? "🛡️" : "🎬";
+      const isOpen = c2.open;
+      const color = isOpen ? 2278750 : 14495300;
+      let desc = c2.msg || "";
+      if (c2.places) desc += `\n\n👥 **${c2.places} place(s) disponible(s)**`;
+      if (c2.date) desc += `\n📅 **Clôture estimée : ${c2.date}**`;
+      if (isOpen) desc += `\n\n📋 **[Postuler maintenant](${FORMS[role]})**`;
+      embeds.push({
+        title: `${roleIcon} Recrutement ${roleLabel} — ${isOpen ? "🟢 OUVERT" : "🔴 FERMÉ"}`,
+        description: desc || (isOpen ? "Les recrutements sont ouverts !" : "Les recrutements sont fermés."),
+        color,
+        footer: { text: `NoxStudio Recrutement • Par ${adminPseudo}` },
+        timestamp: new Date().toISOString()
+      });
+    });
+
+    const payload = {
+      content: `<@&1496526102347382881> — 📢 Mise à jour des recrutements !`,
+      embeds
+    };
+
+    const r = await fetch(WH_RECRU + "?wait=true", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (r.ok) {
+      btn.textContent = "✅ Les deux annoncés !";
+      btn.style.background = "#238636";
+      setTimeout(() => {
+        btn.textContent = "🚀 Annoncer Modérateur + Animateur";
+        btn.style.background = "";
+        btn.disabled = false;
+      }, 3000);
+    } else {
+      btn.textContent = "❌ Erreur";
       btn.disabled = false;
-    }, 3000);
+    }
   } catch(e) {
+    console.error(e);
     btn.textContent = "❌ Erreur";
     btn.disabled = false;
   }
